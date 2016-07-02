@@ -218,23 +218,23 @@ if __name__ == '__main__':
 
 
     # max energy in kW
-    Umax = 30
+    Umax = 5
 
     # max admissible energy
-    u_m = np.array([20, 20], dtype=float)
+    u_m = np.array([3, 3], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
     Text = np.zeros(m*N)
     T_init = np.array([18, 18], dtype=float)
-    Rth = np.array([20, 20], dtype=float)
-    Cth = np.array([2, 1], dtype=float)
+    Rth = np.array([8, 8], dtype=float)
+    Cth = np.array([3, 3], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_id_pred = np.array([temp_id(18, 24), temp_id(18, 22)])
+    T_id_pred = np.array([temp_id(18, 21), temp_id(18, 22)])
 
 
     # comfort factor
@@ -246,6 +246,7 @@ if __name__ == '__main__':
 
     mat = mat_def(pb)
     u_sol = optim_central(mat)[0]
+    #u_sol = np.ones(m*N)*3
     P_mat = mat['P_mat']
     q_mat = mat['q_mat']
     cte = mat['cte']

@@ -1,7 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="73f9b2f6-03ef-4497-957b-182a894e8821" name="Default" comment="" />
+    <list default="true" id="73f9b2f6-03ef-4497-957b-182a894e8821" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/basispursuit.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/consumerpref.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/cvxfit.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/cvxfit.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/huber.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/huber.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/inputdesign.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/penalties.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/polapprox.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/polapprox.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/regsel.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/regsel.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/robls.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/robls.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Approximation and fitting/smoothrec.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/CentraliseTest.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Convex optimisation problems/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Convex optimisation problems/portfolio.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Convex optimisation problems/rls.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Convex optimisation problems/rls.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/DecentraliseTest.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/centers.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/ellipsoids.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/floorplan.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/linsep.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/linsep.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/placement.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Geometric problems/placement.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/chernoff.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/expdesign.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/logreg.bin" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/logreg.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/maxent.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/Statistical estimation/probbounds.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/__init__.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/draft.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/draft2.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/draft3.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/draft4.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/exoLagrange.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/lagr1.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/power_bars.pdf" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/test.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/OldStuff/tutoOpt.py" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/iPythonExamples/.ipynb_checkpoints/thermal_linprog-checkpoint.ipynb" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/iPythonExamples/__init__.py" afterPath="" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/iPythonExamples/Lagrange duality.ipynb" afterPath="$PROJECT_DIR$/Lagrange duality.ipynb" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/iPythonExamples/therm_data.py" afterPath="$PROJECT_DIR$/therm_data.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/iPythonExamples/thermal_linprog.ipynb" afterPath="$PROJECT_DIR$/thermal_linprog.ipynb" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/iPythonExamples/thermal_lp_sol.npz" afterPath="$PROJECT_DIR$/thermal_lp_sol.npz" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DynamOptDraft.py" afterPath="$PROJECT_DIR$/DynamOptDraft.py" />
+    </list>
     <ignored path="ASH.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -26,8 +82,8 @@
       <file leaf-file-name="DynamOptDraft.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="205" column="26" selection-start-line="205" selection-start-column="26" selection-end-line="205" selection-end-column="26" />
+            <state relative-caret-position="478">
+              <caret line="263" column="0" selection-start-line="263" selection-start-column="0" selection-end-line="263" selection-end-column="0" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
                 <element signature="e#310#2791#0" expanded="false" />
@@ -36,7 +92,7 @@
                 <element signature="e#3828#4335#0" expanded="false" />
                 <element signature="e#4374#5328#0" expanded="false" />
                 <element signature="e#5363#5497#0" expanded="false" />
-                <element signature="e#5531#6895#0" expanded="false" />
+                <element signature="e#5531#6918#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -130,6 +186,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -151,7 +208,6 @@
         </subPane>
       </pane>
       <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -469,7 +525,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2479452" sideWeight="0.50913423" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22131148" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16666667" sideWeight="0.49086577" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16666667" sideWeight="0.49086577" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2494043" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29098362" sideWeight="0.49722" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -496,7 +552,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="45" />
+      <option name="time" value="47" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -816,7 +872,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="197">
           <caret line="3721" column="0" selection-start-line="3721" selection-start-column="0" selection-end-line="3721" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -824,7 +879,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="197">
           <caret line="2066" column="0" selection-start-line="2066" selection-start-column="0" selection-end-line="2066" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -832,15 +886,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="172">
           <caret line="148" column="75" selection-start-line="148" selection-start-column="23" selection-end-line="148" selection-end-column="75" />
-          <folding>
-            <element signature="e#0#47#0" expanded="false" />
-            <element signature="e#310#1146#0" expanded="false" />
-            <element signature="e#1195#2370#0" expanded="false" />
-            <element signature="e#2403#2954#0" expanded="false" />
-            <element signature="e#4805#5651#0" expanded="false" />
-            <element signature="e#5706#7187#0" expanded="false" />
-            <element signature="e#7221#8431#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -848,22 +893,13 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
           <caret line="235" column="19" selection-start-line="235" selection-start-column="19" selection-end-line="235" selection-end-column="19" />
-          <folding>
-            <element signature="e#346#2034#0" expanded="false" />
-            <element signature="e#2089#2557#0" expanded="false" />
-            <element signature="e#2587#3028#0" expanded="false" />
-            <element signature="e#3071#3473#0" expanded="false" />
-            <element signature="e#3512#4465#0" expanded="false" />
-            <element signature="e#4500#4634#0" expanded="false" />
-            <element signature="e#4668#5784#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="205" column="26" selection-start-line="205" selection-start-column="26" selection-end-line="205" selection-end-column="26" />
+        <state relative-caret-position="478">
+          <caret line="263" column="0" selection-start-line="263" selection-start-column="0" selection-end-line="263" selection-end-column="0" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
             <element signature="e#310#2791#0" expanded="false" />
@@ -872,7 +908,7 @@
             <element signature="e#3828#4335#0" expanded="false" />
             <element signature="e#4374#5328#0" expanded="false" />
             <element signature="e#5363#5497#0" expanded="false" />
-            <element signature="e#5531#6895#0" expanded="false" />
+            <element signature="e#5531#6918#0" expanded="false" />
           </folding>
         </state>
       </provider>
