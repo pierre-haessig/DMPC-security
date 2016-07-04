@@ -80,13 +80,13 @@ def mat_def(pb):
         for l in range(m):
             Y_c[l + m * k] = T_id_pred[l, k]
     ###
-    cte = (F.dot(X)).T.dot(D.dot(F)).dot(X) + 2*((H_ext.dot(Text)).T.dot(D.dot(F)) - Y_c.T.dot(D.T.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.T.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
+    cte = ((F.dot(X)).T).dot(D.dot(F)).dot(X) + 2*(((H_ext.dot(Text)).T).dot(D.dot(F)) - Y_c.T.dot(D.T.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.T.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
     ###
-    P_mat = (H.transpose().dot(D)).dot(H)
+    P_mat = ((H.T).dot(D)).dot(H)
     P = matrix(P_mat, tc='d')
     ###
-    q_mat = (c_t + 2 * ((X.transpose()).dot(F.T)).dot(D.dot(H)) + 2 * ((Y_c.transpose()).dot(H_ext.T)).dot(D.dot(H)) - 2 * (Y_c.transpose()).dot(D.dot(H)))
-    q = matrix(q_mat.transpose(),
+    q_mat = (c_t + 2 * ((X.T).dot(F.T)).dot(D.dot(H)) + 2 * ((Y_c.T).dot(H_ext.T)).dot(D.dot(H)) - 2 * (Y_c.T).dot(D.dot(H)))
+    q = matrix(q_mat.T,
                tc='d')
     ###
     ###
@@ -151,7 +151,7 @@ def get_temp_op_OL(pb, mat,  u_sol):
 
     X = T_init
 
-    Y = F.dot(X) + H.dot(u_sol) + H_ext.dot(np.ones(m*N)*Text)
+    Y = F.dot(X) + H.dot(u_sol) + H_ext.dot(Text)
 
     return Y
 
@@ -206,7 +206,7 @@ def temp_id(T_abs, T_pres):
 if __name__ == '__main__':
 
     # number of users
-    m = 2
+    m = 1
     i = np.arange(m)
 
     # Time step
@@ -218,27 +218,27 @@ if __name__ == '__main__':
 
 
     # max energy in kW
-    Umax = 5
+    Umax = 10
 
     # max admissible energy
-    u_m = np.array([3, 4], dtype=float)
+    u_m = np.array([5], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
-    Text = np.zeros(m*N)
-    T_init = np.array([18, 18], dtype=float)
-    Rth = np.array([8, 8], dtype=float)
-    Cth = np.array([15, 15], dtype=float)
+    Text = np.ones(m*N)*2
+    T_init = np.array([19], dtype=float)
+    Rth = np.array([20], dtype=float)
+    Cth = np.array([0.1], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_id_pred = np.array([temp_id(18, 21), temp_id(18, 22)])
+    T_id_pred = np.array([temp_id(18, 22)])
 
 
     # comfort factor
-    alpha = np.array([100, 100], dtype=float)
+    alpha = np.array([100], dtype=float)
 
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N)

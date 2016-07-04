@@ -4,6 +4,7 @@
     <list default="true" id="73f9b2f6-03ef-4497-957b-182a894e8821" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DynamOptDraft.py" afterPath="$PROJECT_DIR$/DynamOptDraft.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/thermal_linprog.ipynb" afterPath="$PROJECT_DIR$/thermal_linprog.ipynb" />
     </list>
     <ignored path="ASH.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -29,17 +30,14 @@
       <file leaf-file-name="DynamOptDraft.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
+            <state relative-caret-position="301">
+              <caret line="236" column="40" selection-start-line="236" selection-start-column="40" selection-end-line="236" selection-end-column="40" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
-                <element signature="e#310#2848#0" expanded="false" />
-                <element signature="e#2903#3371#0" expanded="false" />
-                <element signature="e#3401#3842#0" expanded="false" />
-                <element signature="e#3885#4392#0" expanded="false" />
-                <element signature="e#4431#5385#0" expanded="false" />
-                <element signature="e#5420#5554#0" expanded="false" />
-                <element signature="e#5588#7007#0" expanded="false" />
+                <element signature="e#2859#3327#0" expanded="false" />
+                <element signature="e#3357#3798#0" expanded="false" />
+                <element signature="e#3841#4335#0" expanded="false" />
+                <element signature="e#4374#5328#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -454,7 +452,14 @@
       <option name="project" value="LOCAL" />
       <updated>1467621834390</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Rectification de q, prise en compte de Text. &#10;&#10;mat['cte'] a été verifiée">
+      <created>1467622097527</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1467622097527</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -508,17 +513,23 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Rectification de q, prise en compte de Text. &#10;" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rectification de q, prise en compte de Text. &#10;" />
+    <MESSAGE value="Rectification de q, prise en compte de Text. &#10;&#10;mat['cte'] a été verifiée" />
+    <option name="LAST_COMMIT_MESSAGE" value="Rectification de q, prise en compte de Text. &#10;&#10;mat['cte'] a été verifiée" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="49" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DynamOptDraft.py</url>
+          <line>87</line>
+          <option name="timeStamp" value="50" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="51" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/OldStuff/Approximation and fitting/consumerpref.py" />
-    <entry file="file://$PROJECT_DIR$/OldStuff/Approximation and fitting/cvxfit.py" />
     <entry file="file://$PROJECT_DIR$/OldStuff/Geometric problems/ellipsoids.py" />
     <entry file="file://$PROJECT_DIR$/OldStuff/Statistical estimation/expdesign.py" />
     <entry file="file://$PROJECT_DIR$/OldStuff/Geometric problems/floorplan.py" />
@@ -682,19 +693,33 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/therm_data.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="18" column="6" selection-start-line="18" selection-start-column="6" selection-end-line="18" selection-end-column="6" />
+          <folding>
+            <element signature="e#609#1090#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/thermal_linprog.ipynb">
+      <provider selected="true" editor-type-id="ipnb-editor">
+        <state>
+          <selected id="0" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
+        <state relative-caret-position="301">
+          <caret line="236" column="40" selection-start-line="236" selection-start-column="40" selection-end-line="236" selection-end-column="40" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
-            <element signature="e#310#2848#0" expanded="false" />
-            <element signature="e#2903#3371#0" expanded="false" />
-            <element signature="e#3401#3842#0" expanded="false" />
-            <element signature="e#3885#4392#0" expanded="false" />
-            <element signature="e#4431#5385#0" expanded="false" />
-            <element signature="e#5420#5554#0" expanded="false" />
-            <element signature="e#5588#7007#0" expanded="false" />
+            <element signature="e#2859#3327#0" expanded="false" />
+            <element signature="e#3357#3798#0" expanded="false" />
+            <element signature="e#3841#4335#0" expanded="false" />
+            <element signature="e#4374#5328#0" expanded="false" />
           </folding>
         </state>
       </provider>
