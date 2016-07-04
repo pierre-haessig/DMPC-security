@@ -80,7 +80,7 @@ def mat_def(pb):
         for l in range(m):
             Y_c[l + m * k] = T_id_pred[l, k]
     ###
-    cte = (F.dot(X)).T.dot(D.dot(F)).dot(X) + 2*((H_ext.dot(Text)).T.dot(D.dot(F)) - Y_c.T.dot(D.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
+    cte = (F.dot(X)).T.dot(D.dot(F)).dot(X) + 2*((H_ext.dot(Text)).T.dot(D.dot(F)) - Y_c.T.dot(D.T.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.T.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
     ###
     P_mat = (H.transpose().dot(D)).dot(H)
     P = matrix(P_mat, tc='d')

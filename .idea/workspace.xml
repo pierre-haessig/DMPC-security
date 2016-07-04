@@ -29,17 +29,17 @@
       <file leaf-file-name="DynamOptDraft.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="273">
-              <caret line="205" column="26" selection-start-line="205" selection-start-column="26" selection-end-line="205" selection-end-column="26" />
+            <state relative-caret-position="210">
+              <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
-                <element signature="e#310#2844#0" expanded="false" />
-                <element signature="e#2899#3367#0" expanded="false" />
-                <element signature="e#3397#3838#0" expanded="false" />
-                <element signature="e#3881#4388#0" expanded="false" />
-                <element signature="e#4427#5381#0" expanded="false" />
-                <element signature="e#5416#5550#0" expanded="false" />
-                <element signature="e#5584#7003#0" expanded="false" />
+                <element signature="e#310#2848#0" expanded="false" />
+                <element signature="e#2903#3371#0" expanded="false" />
+                <element signature="e#3401#3842#0" expanded="false" />
+                <element signature="e#3885#4392#0" expanded="false" />
+                <element signature="e#4431#5385#0" expanded="false" />
+                <element signature="e#5420#5554#0" expanded="false" />
+                <element signature="e#5588#7007#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -447,6 +447,14 @@
       <option name="presentableId" value="Default" />
       <updated>1466411875072</updated>
     </task>
+    <task id="LOCAL-00001" summary="Rectification de q, prise en compte de Text. &#10;">
+      <created>1467621834390</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1467621834390</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -469,6 +477,7 @@
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19777602" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3280757" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2479452" sideWeight="0.50913423" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22131148" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -497,9 +506,13 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Rectification de q, prise en compte de Text. &#10;" />
+    <option name="LAST_COMMIT_MESSAGE" value="Rectification de q, prise en compte de Text. &#10;" />
+  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="48" />
+      <option name="time" value="49" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -671,17 +684,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="273">
-          <caret line="205" column="26" selection-start-line="205" selection-start-column="26" selection-end-line="205" selection-end-column="26" />
+        <state relative-caret-position="210">
+          <caret line="14" column="16" selection-start-line="14" selection-start-column="16" selection-end-line="14" selection-end-column="16" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
-            <element signature="e#310#2844#0" expanded="false" />
-            <element signature="e#2899#3367#0" expanded="false" />
-            <element signature="e#3397#3838#0" expanded="false" />
-            <element signature="e#3881#4388#0" expanded="false" />
-            <element signature="e#4427#5381#0" expanded="false" />
-            <element signature="e#5416#5550#0" expanded="false" />
-            <element signature="e#5584#7003#0" expanded="false" />
+            <element signature="e#310#2848#0" expanded="false" />
+            <element signature="e#2903#3371#0" expanded="false" />
+            <element signature="e#3401#3842#0" expanded="false" />
+            <element signature="e#3885#4392#0" expanded="false" />
+            <element signature="e#4431#5385#0" expanded="false" />
+            <element signature="e#5420#5554#0" expanded="false" />
+            <element signature="e#5588#7007#0" expanded="false" />
           </folding>
         </state>
       </provider>
