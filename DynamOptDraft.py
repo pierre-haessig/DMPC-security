@@ -82,15 +82,15 @@ def mat_def(pb):
     ###
     cte = ((F.dot(X)).T).dot(D.dot(F)).dot(X) + 2*(((H_ext.dot(Text)).T).dot(D.dot(F)) - Y_c.T.dot(D.T.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.T.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
     ###
-    P_mat = ((H.T).dot(D)).dot(H)
+    P_mat = (H.T).dot(D.dot(H))
     P = matrix(P_mat, tc='d')
     ###
-    q_mat = (c_t + 2 * ((X.T).dot(F.T)).dot(D.dot(H)) + 2 * ((Y_c.T).dot(H_ext.T)).dot(D.dot(H)) - 2 * (Y_c.T).dot(D.dot(H)))
+    q_mat = (c_t + 2 * ((F.dot(X)).T.dot(D.dot(H))) + 2 * (((H_ext.dot(Text)).T).dot(D.dot(H))) - 2 * (Y_c.T).dot(D.dot(H)))
     q = matrix(q_mat.T,
                tc='d')
     ###
     ###
-    mat = dict(A=A, B=B, C=C, F=F, H=H, G=G, H_ext=H_ext, c_t=c_t, h=h, D=D, P=P, q=q, W=Y_c, cte=cte, P_mat=P_mat, q_mat=q_mat)
+    mat = dict(A=A, B=B, C=C, F=F, H=H, G=G, H_ext=H_ext, c_t=c_t, h=h, D=D, P=P, q=q, Y_c=Y_c, cte=cte, P_mat=P_mat, q_mat=q_mat)
 
     return mat
 
@@ -221,14 +221,14 @@ if __name__ == '__main__':
     Umax = 10
 
     # max admissible energy
-    u_m = np.array([5], dtype=float)
+    u_m = np.array([3], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
     Text = np.ones(m*N)*2
-    T_init = np.array([19], dtype=float)
-    Rth = np.array([20], dtype=float)
-    Cth = np.array([0.1], dtype=float)
+    T_init = np.array([17], dtype=float)
+    Rth = np.array([500], dtype=float)
+    Cth = np.array([0.01], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
 
     # comfort factor
-    alpha = np.array([100], dtype=float)
+    alpha = np.array([10], dtype=float)
 
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N)
@@ -252,13 +252,13 @@ if __name__ == '__main__':
     q_mat = mat['q_mat']
     cte = mat['cte']
 
+    #print(mat)
 
-    Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
-
+    #Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
     T_opt = get_temp_op_OL(pb, mat, u_sol)
-
     plot_t(pb, 0, T_opt, u_sol)
 
+    print('o')
 
 
 

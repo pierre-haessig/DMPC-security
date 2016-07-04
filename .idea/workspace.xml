@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="73f9b2f6-03ef-4497-957b-182a894e8821" name="Default" comment="">
+    <list default="true" id="73f9b2f6-03ef-4497-957b-182a894e8821" name="Default" comment="Valeurs cohérentes.&#10;Pb d'opt">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DynamOptDraft.py" afterPath="$PROJECT_DIR$/DynamOptDraft.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/thermal_linprog.ipynb" afterPath="$PROJECT_DIR$/thermal_linprog.ipynb" />
     </list>
     <ignored path="ASH.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -30,14 +29,15 @@
       <file leaf-file-name="DynamOptDraft.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="301">
-              <caret line="236" column="40" selection-start-line="236" selection-start-column="40" selection-end-line="236" selection-end-column="40" />
+            <state relative-caret-position="166">
+              <caret line="229" column="21" selection-start-line="229" selection-start-column="21" selection-end-line="229" selection-end-column="21" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
-                <element signature="e#2859#3327#0" expanded="false" />
-                <element signature="e#3357#3798#0" expanded="false" />
-                <element signature="e#3841#4335#0" expanded="false" />
-                <element signature="e#4374#5328#0" expanded="false" />
+                <element signature="e#2858#3326#0" expanded="false" />
+                <element signature="e#3356#3797#0" expanded="false" />
+                <element signature="e#3840#4334#0" expanded="false" />
+                <element signature="e#4373#5327#0" expanded="false" />
+                <element signature="e#5362#5496#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -459,7 +459,14 @@
       <option name="project" value="LOCAL" />
       <updated>1467622097527</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Valeurs cohérentes.&#10;Pb d'opt">
+      <created>1467631742278</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1467631742278</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -485,11 +492,11 @@
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2479452" sideWeight="0.50913423" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22131148" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22054794" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32876712" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32328767" sideWeight="0.49086577" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2494043" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29098362" sideWeight="0.49722" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29041097" sideWeight="0.49722" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -514,17 +521,11 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Rectification de q, prise en compte de Text. &#10;" />
     <MESSAGE value="Rectification de q, prise en compte de Text. &#10;&#10;mat['cte'] a été verifiée" />
-    <option name="LAST_COMMIT_MESSAGE" value="Rectification de q, prise en compte de Text. &#10;&#10;mat['cte'] a été verifiée" />
+    <MESSAGE value="Valeurs cohérentes.&#10;Pb d'opt" />
+    <option name="LAST_COMMIT_MESSAGE" value="Valeurs cohérentes.&#10;Pb d'opt" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DynamOptDraft.py</url>
-          <line>87</line>
-          <option name="timeStamp" value="50" />
-        </line-breakpoint>
-      </breakpoints>
       <option name="time" value="51" />
     </breakpoint-manager>
     <watches-manager />
@@ -665,13 +666,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file:///System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/matplotlib/axes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="197">
-          <caret line="3721" column="0" selection-start-line="3721" selection-start-column="0" selection-end-line="3721" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///Library/Python/2.7/site-packages/cvxopt/coneprog.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="197">
@@ -710,16 +704,25 @@
         </state>
       </provider>
     </entry>
+    <entry file="file:///System/Library/Frameworks/Python.framework/Versions/2.7/Extras/lib/python/matplotlib/axes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="155">
+          <caret line="4136" column="0" selection-start-line="4136" selection-start-column="0" selection-end-line="4136" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/DynamOptDraft.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="301">
-          <caret line="236" column="40" selection-start-line="236" selection-start-column="40" selection-end-line="236" selection-end-column="40" />
+        <state relative-caret-position="166">
+          <caret line="229" column="21" selection-start-line="229" selection-start-column="21" selection-end-line="229" selection-end-column="21" />
           <folding>
             <element signature="e#0#47#0" expanded="true" />
-            <element signature="e#2859#3327#0" expanded="false" />
-            <element signature="e#3357#3798#0" expanded="false" />
-            <element signature="e#3841#4335#0" expanded="false" />
-            <element signature="e#4374#5328#0" expanded="false" />
+            <element signature="e#2858#3326#0" expanded="false" />
+            <element signature="e#3356#3797#0" expanded="false" />
+            <element signature="e#3840#4334#0" expanded="false" />
+            <element signature="e#4373#5327#0" expanded="false" />
+            <element signature="e#5362#5496#0" expanded="false" />
           </folding>
         </state>
       </provider>
