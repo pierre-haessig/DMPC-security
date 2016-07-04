@@ -85,7 +85,7 @@ def mat_def(pb):
     P_mat = (H.transpose().dot(D)).dot(H)
     P = matrix(P_mat, tc='d')
     ###
-    q_mat = (c_t + 2 * ((X.transpose()).dot(F.T)).dot(D.dot(H)) - 2 * (Y_c.transpose()).dot(D.dot(H)))
+    q_mat = (c_t + 2 * ((X.transpose()).dot(F.T)).dot(D.dot(H)) + 2 * ((Y_c.transpose()).dot(H_ext.T)).dot(D.dot(H)) - 2 * (Y_c.transpose()).dot(D.dot(H)))
     q = matrix(q_mat.transpose(),
                tc='d')
     ###
@@ -221,14 +221,14 @@ if __name__ == '__main__':
     Umax = 5
 
     # max admissible energy
-    u_m = np.array([3, 3], dtype=float)
+    u_m = np.array([3, 4], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
     Text = np.zeros(m*N)
     T_init = np.array([18, 18], dtype=float)
     Rth = np.array([8, 8], dtype=float)
-    Cth = np.array([3, 3], dtype=float)
+    Cth = np.array([15, 15], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
@@ -247,9 +247,11 @@ if __name__ == '__main__':
     mat = mat_def(pb)
     u_sol = optim_central(mat)[0]
     #u_sol = np.ones(m*N)*3
+    #u_sol = np.zeros(m * N)
     P_mat = mat['P_mat']
     q_mat = mat['q_mat']
     cte = mat['cte']
+
 
     Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
 
