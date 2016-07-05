@@ -82,7 +82,7 @@ def mat_def(pb):
     ###
     cte = ((F.dot(X)).T).dot(D.dot(F)).dot(X) + 2*(((H_ext.dot(Text)).T).dot(D.dot(F)) - Y_c.T.dot(D.T.dot(F))).dot(X) + (H_ext.dot(Text)).T.dot(D.dot(H_ext.dot(Text))) - 2*Y_c.T.dot(D.T.dot(H_ext.dot(Text))) + Y_c.T.dot(D.dot(Y_c))
     ###
-    P_mat = (H.T).dot(D.dot(H))
+    P_mat = 2*(H.T).dot(D.dot(H))
     P = matrix(P_mat, tc='d')
     ###
     q_mat = (c_t + 2 * ((F.dot(X)).T.dot(D.dot(H))) + 2 * (((H_ext.dot(Text)).T).dot(D.dot(H))) - 2 * (Y_c.T).dot(D.dot(H)))
@@ -90,7 +90,7 @@ def mat_def(pb):
                tc='d')
     ###
     ###
-    mat = dict(A=A, B=B, C=C, F=F, H=H, G=G, H_ext=H_ext, c_t=c_t, h=h, D=D, P=P, q=q, Y_c=Y_c, cte=cte, P_mat=P_mat, q_mat=q_mat)
+    mat = dict(A=A, B=B, C=C, F=F, H=H, G=G, B_Text = B_Text, H_ext=H_ext, c_t=c_t, h=h, D=D, P=P, q=q, Y_c=Y_c, cte=cte, P_mat=P_mat, q_mat=q_mat)
 
     return mat
 
@@ -221,32 +221,33 @@ if __name__ == '__main__':
     Umax = 10
 
     # max admissible energy
-    u_m = np.array([2], dtype=float)
+    u_m = np.array([1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
     Text = np.ones(m*N)*0
     T_init = np.array([0], dtype=float)
     Rth = np.array([25], dtype=float)
-    Cth = np.array([0.28], dtype=float)
+    Cth = np.array([0.028], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
     T_id_pred = np.array([temp_id(18, 22)])
-
+    #T_id_pred = np.array([np.ones(N)*20])
 
     # comfort factor
-    alpha = np.array([10000], dtype=float)
+    alpha = np.array([100], dtype=float)
 
 
-    pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N)
+    pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
     mat = mat_def(pb)
     u_sol = optim_central(mat)[0]
-    #u_sol = np.ones(m*N)*3
+    #u_sol = np.ones(m*N)
+
     #u_sol = np.zeros(m * N)
     P_mat = mat['P_mat']
     q_mat = mat['q_mat']
@@ -258,7 +259,6 @@ if __name__ == '__main__':
     T_opt = get_temp_op_OL(pb, mat, u_sol)
     plot_t(pb, 0, T_opt, u_sol)
 
-    print('o')
 
 
 
