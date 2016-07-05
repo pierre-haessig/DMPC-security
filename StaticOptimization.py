@@ -293,7 +293,6 @@ if __name__ == '__main__':
     print_sol(pb, u_sol_d)
     plot_sol(pb, u_sol_d)
 
-
     #plot_step(pb, 1, 100, 50, 1.0e-3)
 
 
