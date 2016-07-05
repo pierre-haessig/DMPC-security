@@ -206,7 +206,7 @@ def temp_id(T_abs, T_pres):
 if __name__ == '__main__':
 
     # number of users
-    m = 1
+    m = 2
     i = np.arange(m)
 
     # Time step
@@ -221,24 +221,24 @@ if __name__ == '__main__':
     Umax = 10
 
     # max admissible energy
-    u_m = np.array([1], dtype=float)
+    u_m = np.array([1, 1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
     Text = np.ones(m*N)*0
-    T_init = np.array([0], dtype=float)
-    Rth = np.array([25], dtype=float)
-    Cth = np.array([0.028], dtype=float)
+    T_init = np.array([0, 0], dtype=float)
+    Rth = np.array([25, 25], dtype=float)
+    Cth = np.array([0.028, 0.028], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_id_pred = np.array([temp_id(18, 22)])
+    T_id_pred = np.array([temp_id(18, 22), temp_id(18, 25)])
     #T_id_pred = np.array([np.ones(N)*20])
 
     # comfort factor
-    alpha = np.array([100], dtype=float)
+    alpha = np.array([100, 100], dtype=float)
 
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
@@ -257,7 +257,7 @@ if __name__ == '__main__':
 
     #Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
     T_opt = get_temp_op_OL(pb, mat, u_sol)
-    plot_t(pb, 0, T_opt, u_sol)
+    plot_t(pb, 1, T_opt, u_sol)
 
 
 
