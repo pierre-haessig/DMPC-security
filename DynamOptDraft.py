@@ -227,8 +227,8 @@ if __name__ == '__main__':
     # thermal parameters
     Text = np.ones(m*N)*0
     T_init = np.array([0], dtype=float)
-    Rth = np.array([20], dtype=float)
-    Cth = np.array([0.00714], dtype=float)
+    Rth = np.array([25], dtype=float)
+    Cth = np.array([0.28], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
@@ -238,7 +238,7 @@ if __name__ == '__main__':
 
 
     # comfort factor
-    alpha = np.array([100], dtype=float)
+    alpha = np.array([10000], dtype=float)
 
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_init=T_init, Rth=Rth, Cth=Cth, T_id_pred=T_id_pred, alpha=alpha, N=N)
