@@ -9,7 +9,7 @@ solvers.options['show_progress'] = False
 
 
 """
-Centralized MPC Optimization  version v2.1
+Centralized MPC Optimization  Closed Loop version v2.1
 """
 
 def mat_def(pb):
@@ -54,7 +54,7 @@ def mat_def(pb):
     G1 = np.zeros(shape=(N, m * N))
     for l in range(N):
         for k in range(m):
-            G1[l, l * (m) + k] = 1
+            G1[l, l * m + k] = 1
 
     G = matrix(np.vstack((G1, -np.identity(m * N), np.identity(m * N))), tc='d')
     ###
@@ -143,8 +143,6 @@ def get_temp_op_OL(pb, mat,  u_sol):
     # parameters
     T_init = pb['T_init']
     Text = pb['Text']
-    m = pb['m']
-    N = pb['N']
     F = mat['F']
     H = mat['H']
     H_ext = mat['H_ext']
@@ -155,6 +153,47 @@ def get_temp_op_OL(pb, mat,  u_sol):
 
     return Y
 
+def get_Opt_CL(pb):
+    pb_k = pb
+    mat_k = mat_def(pb_k)
+
+    A = mat_k['A']
+    B = mat_k['B']
+    D = mat_k['D']
+    c_t = mat_k['c_t']
+    F = mat_k['F']
+    H = mat_k['H']
+    H_ext = mat_k['H_ext']
+    B_Text = mat_k['B_Text']
+    T_init = pb['T_init']
+    P = mat_k['P']
+    q = mat_k['q']
+    Y_c = mat_k['Y_c']
+
+    U = np.zeros(N_sim * m)
+    T_res = np.zeros(N_sim * m)
+
+    for k in range(N_sim):
+
+        pb_k['T_init'] = T_init
+
+        Y_c = T_mod[k*m:k*m + N]
+
+        q_mat = (c_t + 2 * ((F.dot(T_init)).T.dot(D.dot(H))) + 2 * (((H_ext.dot(Text)).T).dot(D.dot(H))) - 2 * (Y_c.T).dot(D.dot(H)))
+        q = matrix(q_mat.T, tc='d')
+
+        mat_k['q_mat'] = q_mat
+        mat_k['q'] = q
+
+        uk_sol = optim_central(mat_k)
+
+        U[k:k+m] = uk_sol[0][0:m]
+
+        T_init = A.dot(T_init) + B.dot(uk_sol[0][0:m]) + B_Text.dot(Text_sim[k*m:k*m + m])
+        T_res[k*m:(k+1)*m] = T_init
+
+    return T_res, U
+
 def plot_t(pb, i, T_opt, u_sol):
     """
     DynamicOpt.plot_traj(object)
@@ -163,20 +202,21 @@ def plot_t(pb, i, T_opt, u_sol):
     returns : graph of the ideal temperature and the optimum temperature.
     """
 
-    T_id_pred = pb['T_id_pred']
+    T_mod = pb['T_mod']
+
     Text = pb['Text']
     dt = pb['dt']
     N = pb['N']
     m = pb['m']
 
-    t = np.arange(N) * dt
+    t = np.arange(N_sim) * dt
 
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(6,4))
 
-    ax1.plot(t, [T_id_pred[i*N_sim + j] for j in range(N_sim)])
-    ax1.plot(t, [T_opt[m*j+i] for j in range(N)])
+    ax1.plot(t, [T_mod[i*N_sim + j] for j in range(N_sim)])
+    ax1.plot(t, [T_opt[m*j+i] for j in range(N_sim)])
 
-    ax2.plot(t, [u_sol[m*j+i] for j in range(N)], 'r')
+    ax2.plot(t, [u_sol[m*j+i] for j in range(N_sim)], 'r')
 
     ax1.set(
         ylabel='Temperature (deg C)',
@@ -203,6 +243,17 @@ def temp_id(size, T_abs, T_pres):
 
     return T_min
 
+def get_Cost(mat, u_sol):
+    P_mat = mat['P_mat']
+    q_mat = mat['q_mat']
+    cte = mat['cte']
+
+    Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
+
+    return Ju_opt
+
+
+
 if __name__ == '__main__':
 
     # number of users
@@ -214,7 +265,7 @@ if __name__ == '__main__':
 
     # Horizon
     N_sim = int(24/dt)
-    N = N_sim
+    N = int(5/dt)
 
     # max energy in kW
     Umax = 10
@@ -236,7 +287,7 @@ if __name__ == '__main__':
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_mod = np.array([temp_id(N_sim+N, Tabs, Tpres)])
+    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
 
     T_id_pred = np.hstack((temp_id(N, Tabs, Tpres)))  ## ATTENTION : defined user after user
 
@@ -244,29 +295,19 @@ if __name__ == '__main__':
     # comfort factor
     alpha = np.array([100], dtype=float)
 
-    pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
+    pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
     mat = mat_def(pb)
 
     u_sol = optim_central(mat)[0]
-    # u_sol = np.ones(m*N)
 
-    # u_sol = np.zeros(m * N)
-    P_mat = mat['P_mat']
-    q_mat = mat['q_mat']
-    cte = mat['cte']
-
-    # print(mat)
-
-    # Ju_opt = u_sol.T.dot(P_mat.dot(u_sol)) + q_mat.dot(u_sol) + cte
-    T_opt = get_temp_op_OL(pb, mat, u_sol)
-    plot_t(pb, 0, T_opt, u_sol)
+    #T_opt = get_temp_op_OL(pb, mat, u_sol)
+    #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
 
 
-
-
-
+    T_res, U = get_Opt_CL(pb)
+    plot_t(pb, 0, T_res, U)
 
 
 
