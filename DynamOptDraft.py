@@ -236,7 +236,7 @@ if __name__ == '__main__':
 
     T_id_pred = np.array([temp_id(18, 22), temp_id(18, 25)])
 
-    print(T_id_pred)
+
 
     #T_id_pred = np.array([np.ones(N)*20])
 
