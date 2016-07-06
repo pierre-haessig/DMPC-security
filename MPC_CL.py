@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
     # Horizon
     N_sim = int(24/dt)
-    N = int(60)
+    N = int(5/dt)
 
     # max energy in kW
     Umax = 10
@@ -280,8 +280,8 @@ if __name__ == '__main__':
     Tpres = 22
     Tabs = 18
     T_init = np.array([0, 0], dtype=float)
-    Rth = np.array([50, 50], dtype=float)
-    Cth = np.array([0.056, 0.056], dtype=float)
+    Rth = np.array([25, 25], dtype=float)
+    Cth = np.array([0.028, 0.028], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
