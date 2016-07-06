@@ -9,7 +9,7 @@ solvers.options['show_progress'] = False
 
 
 """
-Centralized MPC Optimization  Closed Loop version v2.1
+Centralized MPC Optimization  Closed Loop version v2.3
 """
 
 def mat_def(pb):
@@ -177,7 +177,10 @@ def get_Opt_CL(pb):
 
         pb_k['T_init'] = T_init
 
-        Y_c = T_mod[k*m:k*m + m*N]
+        for j in range(N):
+            for i in range(m):
+                Y_c[j*m + i] = T_mod[i*(N_sim + N) + k + j]
+
 
         q_mat = (c_t + 2 * ((F.dot(T_init)).T.dot(D.dot(H))) + 2 * (((H_ext.dot(Text)).T).dot(D.dot(H))) - 2 * (Y_c.T).dot(D.dot(H)))
         q = matrix(q_mat.T, tc='d')
@@ -187,7 +190,8 @@ def get_Opt_CL(pb):
 
         uk_sol = optim_central(mat_k)
 
-        U[k:k+m] = uk_sol[0][0:m]
+
+        U[k*m:k*m+m] = uk_sol[0][0:m]
 
         T_init = A.dot(T_init) + B.dot(uk_sol[0][0:m]) + B_Text.dot(Text_sim[k*m:k*m + m])
         T_res[k*m:(k+1)*m] = T_init
@@ -202,7 +206,7 @@ def plot_t(pb, i, T_opt, u_sol):
     returns : graph of the ideal temperature and the optimum temperature.
     """
 
-    T_mod = pb['T_mod']
+    T_id_pred = pb['T_id_pred']
 
     Text = pb['Text']
     dt = pb['dt']
@@ -213,20 +217,18 @@ def plot_t(pb, i, T_opt, u_sol):
 
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(6,4))
 
-    ax1.plot(t, [T_mod[i*N_sim + j] for j in range(N_sim)])
+    ax1.plot(t, [T_id_pred[i*N_sim + j] for j in range(N_sim)])
     ax1.plot(t, [T_opt[m*j+i] for j in range(N_sim)])
 
     ax2.plot(t, [u_sol[m*j+i] for j in range(N_sim)], 'r')
 
     ax1.set(
-        ylabel='Temperature (deg C)',
-        #ylim=(Text-0.5, T_id_pred.max()+0.5)
+        ylabel='Temperature (deg C)'
     )
 
     ax2.set(
         xlabel='t(h)',
-        ylabel='Power(kW)',
-        #ylim=(0, max([u_sol[m*j+i] for j in range(N)])+0.5)
+        ylabel='Power(kW)'
     )
 
     fig.tight_layout()
@@ -255,7 +257,7 @@ def get_Cost(mat, u_sol):
 if __name__ == '__main__':
 
     # number of users
-    m = 1
+    m = 2
     i = np.arange(m)
 
     # Time step
@@ -263,13 +265,13 @@ if __name__ == '__main__':
 
     # Horizon
     N_sim = int(24/dt)
-    N = int(30)
+    N = int(5/dt)
 
     # max energy in kW
     Umax = 10
 
     # max admissible energy
-    u_m = np.array([1], dtype=float)
+    u_m = np.array([1, 1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
@@ -277,21 +279,21 @@ if __name__ == '__main__':
     Text = Text_sim[0:m*N]
     Tpres = 22
     Tabs = 18
-    T_init = np.array([0], dtype=float)
-    Rth = np.array([50], dtype=float)
-    Cth = np.array([0.056], dtype=float)
+    T_init = np.array([0, 0], dtype=float)
+    Rth = np.array([50, 50], dtype=float)
+    Cth = np.array([0.056, 0.056], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres) )) ## ATTENTION : defined user after user
+    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
 
-    T_id_pred = np.hstack((temp_id(N, Tabs, Tpres)))  ## ATTENTION : defined user after user
+    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
 
 
     # comfort factor
-    alpha = np.array([100], dtype=float)
+    alpha = np.array([100, 100], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
@@ -305,6 +307,8 @@ if __name__ == '__main__':
 
     #T_opt = get_temp_op_OL(pb, mat, u_sol)
     #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
+
+
 
     T_res, U = get_Opt_CL(pb)
     plot_t(pb, 0, T_res, U)
