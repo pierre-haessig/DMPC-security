@@ -287,9 +287,9 @@ if __name__ == '__main__':
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
+    T_mod = np.hstack((temp_id(N_sim+N, 17, 25), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
 
-    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
+    T_id_pred = np.hstack((temp_id(N_sim, 17, 25), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
 
 
     # comfort factor
