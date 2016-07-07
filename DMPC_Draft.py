@@ -172,8 +172,8 @@ def optim_decen(pb, step, e, k_max=1000):
         for j in range(m):
 
             Xj = T_init[j]
-            Aj = 1 - dt * (-1 / tau_th[j])
-            Fj = np.asarray([Aj**i for i in range(N)]).T
+            Aj = 1 - dt * (1 / tau_th[j])
+            Fj = np.asarray([Aj**(i+1) for i in range(N)]).T
             Textj = np.asarray([np.zeros(N)]).T
             Bj = (dt / Cth[j])
             Cj = 1
@@ -205,6 +205,9 @@ def optim_decen(pb, step, e, k_max=1000):
             H_extj = H_init_Textj
             ###
             Y_cj = np.zeros(N)
+            for l in range(N):
+                Y_cj[l] = T_id_pred[j * N + k]
+
             ###
             P_matj = 2 * (Hj.T).dot(Dj.dot(Hj))
             Pj = matrix(P_matj, tc='d')
@@ -218,6 +221,9 @@ def optim_decen(pb, step, e, k_max=1000):
             mat_k = dict(Aj=Aj, Bj=Bj, Cj=Cj, Fj=Fj, Hj=Hj, Gj=Gj, B_Textj=B_Textj, H_extj=H_extj, c_tj=c_tj, hj=hj, Dj=Dj, Pj=Pj, qj=qj, Y_cj=Y_cj,
                        P_matj=P_matj, q_matj=q_matj)
             ###
+
+            print(mat_k)
+
 
             for k in range(N_sim):
 
@@ -376,7 +382,7 @@ def get_Cost(mat, u_sol):
 if __name__ == '__main__':
 
     # number of users
-    m = 2
+    m = 1
     i = np.arange(m)
 
     # Time step
@@ -390,7 +396,7 @@ if __name__ == '__main__':
     Umax = 10
 
     # max admissible energy
-    u_m = np.array([1, 1], dtype=float)
+    u_m = np.array([1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
@@ -398,40 +404,40 @@ if __name__ == '__main__':
     Text = Text_sim[0:m*N]
     Tpres = 22
     Tabs = 18
-    T_init = np.array([0, 0], dtype=float)
-    Rth = np.array([50, 50], dtype=float)
-    Cth = np.array([0.056, 0.056], dtype=float)
+    T_init = np.array([0], dtype=float)
+    Rth = np.array([50], dtype=float)
+    Cth = np.array([0.056], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
+    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
 
-    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
+    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
 
 
     # comfort factor
-    alpha = np.array([100, 100], dtype=float)
+    alpha = np.array([100], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
-
-
-    #mat = mat_def(pb)
-
-    #u_sol = optim_central(mat)[0]
-
-    #T_opt = get_temp_op_OL(pb, mat, u_sol)
-    #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
+    U, Tres, L, k = optim_decen(pb, 1.5, 1.0e-2)
+    plot_t(pb, 0, Tres, U)
 
     #T_res, U = get_Opt_CL(pb)
     #plot_t(pb, 0, T_res, U)
 
-    U, Tres, L, k = optim_decen(pb, 1.5, 1.0e-2)
-    plot_t(pb, 0, Tres, U)
+    #mat = mat_def(pb)
+    #print(mat)
+    #u_sol = optim_central(mat)[0]
+    #T_opt = get_temp_op_OL(pb, mat, u_sol)
+    #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
+
+
+
 
 
 
