@@ -131,7 +131,7 @@ def optim_central(mat):
 
     return u_sol, prime_obj
 
-def optim_decen(pb, step, e, k_max=1000):
+def optim_decen(pb, step, e, k_max=100):
     """ Distributed optimization for power allocation
 
           optim_decen(object)
@@ -140,7 +140,6 @@ def optim_decen(pb, step, e, k_max=1000):
           iterations
 
     """
-
     m = pb['m']
     Umax = pb['Umax']
     u_m = pb['u_m']
@@ -157,14 +156,9 @@ def optim_decen(pb, step, e, k_max=1000):
 
     # Local variables
     tau_th = Rth * Cth
-
     L = np.zeros(N)
 
-
-
-    for k in range(k_max):
-
-        #assert L[j] >= 0 for j in range(N), "u_id can be reached for all users"
+    for z in range(k_max):
 
         U = np.zeros(N_sim * m)
         T_res = np.zeros(N_sim * m)
@@ -221,10 +215,7 @@ def optim_decen(pb, step, e, k_max=1000):
             mat_k = dict(Aj=Aj, Bj=Bj, Cj=Cj, Fj=Fj, Hj=Hj, Gj=Gj, B_Textj=B_Textj, H_extj=H_extj, c_tj=c_tj, hj=hj, Dj=Dj, Pj=Pj, qj=qj, Y_cj=Y_cj,
                        P_matj=P_matj, q_matj=q_matj)
             ###
-
-            print(mat_k)
-
-
+            ###
             for k in range(N_sim):
 
 
@@ -249,13 +240,17 @@ def optim_decen(pb, step, e, k_max=1000):
                 Xj = Aj*Xj + Bj*U[k*m + j] + B_Textj*Text_sim[k*m+j]
                 T_res[k * m + j] = Xj
 
-        L = L + step * (G1.dot(U[0:N*m]) - Umax)
+        Delta = G1.dot(U[0:N*m]) - Umax
+        Delta[Delta<0] = 0
+        L = L + step * (Delta)
 
-        if any(x - Umax < e for x in G1.dot(U[0:N*m])):
+        print(z)
+
+        if all(x < e for x in Delta):
             # print('break at %s.' %(k))
             break
-    return U, T_res, L, k
 
+    return U, T_res, L, z
 
 def get_temp_op_OL(pb, mat,  u_sol):
     """
@@ -382,7 +377,7 @@ def get_Cost(mat, u_sol):
 if __name__ == '__main__':
 
     # number of users
-    m = 1
+    m = 2
     i = np.arange(m)
 
     # Time step
@@ -393,10 +388,10 @@ if __name__ == '__main__':
     N = int(5/dt)
 
     # max energy in kW
-    Umax = 10
+    Umax = 1
 
     # max admissible energy
-    u_m = np.array([1], dtype=float)
+    u_m = np.array([2, 2], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
@@ -404,27 +399,29 @@ if __name__ == '__main__':
     Text = Text_sim[0:m*N]
     Tpres = 22
     Tabs = 18
-    T_init = np.array([0], dtype=float)
-    Rth = np.array([50], dtype=float)
-    Cth = np.array([0.056], dtype=float)
+    T_init = np.array([0, 0], dtype=float)
+    Rth = np.array([50, 50], dtype=float)
+    Cth = np.array([0.056, 0.056], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
 
 
-    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
+    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
 
-    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
+    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
 
 
     # comfort factor
-    alpha = np.array([100], dtype=float)
+    alpha = np.array([100, 100], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
     U, Tres, L, k = optim_decen(pb, 1.5, 1.0e-2)
+    print(L)
+    print(k)
     plot_t(pb, 0, Tres, U)
 
     #T_res, U = get_Opt_CL(pb)
