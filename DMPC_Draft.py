@@ -230,15 +230,14 @@ def optim_decen(pb, step, e, k_max=100):
             Delta[Delta < 0] = 0
             L = L + step * (Delta)
 
-            Xj = Aj * Xj + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
-            T_res[k * m + j] = Xj
-
-            print(i_u)
+            for j in range(m):
+                Xj = Aj * Xj + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
+                T_res[k * m + j] = Xj
 
 
             if all(x < e for x in Delta):
                 break
-
+        print(k)
     return U, T_res, L, i_u
 
 
