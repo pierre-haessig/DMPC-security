@@ -161,10 +161,12 @@ def optim_decen(pb, step, e, k_max=100):
     for k in range(N_sim):
         L = np.zeros(N)
 
+        U = np.zeros(N_sim * m)
+        T_res = np.zeros(N_sim * m)
+
         for i_u in range(k_max):
 
-            U = np.zeros(N_sim * m)
-            T_res = np.zeros(N_sim * m)
+
             Y_cj = np.zeros(N)
 
             for j in range(m):
@@ -231,6 +233,10 @@ def optim_decen(pb, step, e, k_max=100):
             L = L + step * (Delta)
 
             for j in range(m):
+                Aj = 1 - dt * (1 / tau_th[j])
+                Bj = (dt / Cth[j])
+                B_Textj = (dt / tau_th[j])
+                Xj = T_init[j]
                 Xj = Aj * Xj + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
                 T_res[k * m + j] = Xj
 
