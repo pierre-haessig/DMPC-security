@@ -212,7 +212,7 @@ def optim_decen(pb, step, e, k_max=100):
             qj = matrix(q_matj.T,
                     tc='d')
 
-            mat_k = dict(Aj=Aj, Bj=Bj, Cj=Cj, Fj=Fj, Hj=Hj, Gj=Gj, B_Textj=B_Textj, H_extj=H_extj, c_tj=c_tj, hj=hj, Dj=Dj, Pj=Pj, qj=qj, Y_cj=Y_cj,
+            mat_j = dict(Aj=Aj, Bj=Bj, Cj=Cj, Fj=Fj, Hj=Hj, Gj=Gj, B_Textj=B_Textj, H_extj=H_extj, c_tj=c_tj, hj=hj, Dj=Dj, Pj=Pj, qj=qj, Y_cj=Y_cj,
                        P_matj=P_matj, q_matj=q_matj)
             ###
             ###
@@ -229,8 +229,8 @@ def optim_decen(pb, step, e, k_max=100):
                 qj = matrix(q_matj.T,
                             tc='d')
 
-                mat_k['q_mat'] = q_matj
-                mat_k['q'] = qj
+                mat_j['q_mat'] = q_matj
+                mat_j['q'] = qj
 
 
                 uk_sol =solvers.qp(Pj, qj, Gj, hj)

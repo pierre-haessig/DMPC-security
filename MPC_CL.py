@@ -169,6 +169,7 @@ def get_Opt_CL(pb):
     P = mat_k['P']
     q = mat_k['q']
     Y_c = mat_k['Y_c']
+    T_mod = pb['T_mod']
 
     U = np.zeros(N_sim * m)
     T_res = np.zeros(N_sim * m)
