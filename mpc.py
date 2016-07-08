@@ -171,8 +171,8 @@ class MPC(object):
         self.Hp = Hp
         
         # Precompute quadprog matrices which are independent of time
-        self.update_P()
-        self.update_Gh()
+        self._update_P()
+        self._update_Gh()
     
     @staticmethod
     def pred_mat(n, A, C, *B_list):
@@ -220,12 +220,12 @@ class MPC(object):
         
         return (F,) + tuple(H_list)
     
-    def update_P(self):
+    def _update_P(self):
         track_weight = self.track_weight
         Hu = self.Hu
         self.P = 2*track_weight * (Hu.T).dot(Hu)
     
-    def update_q(self, u_cost, x0=None, ys_hor=None, p_hor=None):
+    def _update_q(self, u_cost, x0=None, ys_hor=None, p_hor=None):
         if x0 is not None:
             track_weight = self.track_weight
             F = self.F
@@ -237,12 +237,12 @@ class MPC(object):
         
         self.q = u_cost + self._q0
     
-    def update_j0(self, x0, ys_hor, p_hor):
+    def _update_j0(self, x0, ys_hor, p_hor):
         j0 = ys_hor.T.dot(ys_hor - 2*(F_x + Hp_p)) + \
              F_x.T.dot(F_x) + Hp_p.T.dot(Hp_p) + 2*F_x.T.dot(Hp_p)
         self.j0 = j0*track_weight
     
-    def update_Gh(self):
+    def _update_Gh(self):
         F = self.F
         u_max = self.u_max
         # TODO: fix u_min != 0
@@ -282,15 +282,17 @@ class MPC(object):
 #        return P, q, j0, G, h
     
     def set_xyp(self, x0, ys_hor, p_hor):
+        '''sets the state measurement x0, and forecasts on the horizon
+        set point ys_hor and perturbation p_hor
+        '''
         u_cost = self._u_cost
-        self.update_q(u_cost, x0, ys_hor, p_hor)
-        self.update_j0(u_cost, x0, ys_hor, p_hor)
-    
+        self._update_q(u_cost, x0, ys_hor, p_hor)
+        self._update_j0(u_cost, x0, ys_hor, p_hor)
     
     def set_u_cost(self, u_cost):
         '''recompute quadprog matrices with new cost for u'''
         self._u_cost = u_cost
-        self.update_q(u_cost)
+        self._update_q(u_cost)
     
     def solve_u_opt(self):
         ''''''
