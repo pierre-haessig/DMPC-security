@@ -157,20 +157,23 @@ def optim_decen(pb, step, e, k_max=100):
     # Local variables
     tau_th = Rth * Cth
 
+    U = np.ones(N_sim * m)
+    T_res = np.zeros((N_sim+1) * m)
+
+    T_res[0:m] = T_init
 
     for k in range(N_sim):
         L = np.zeros(N)
-        U = np.zeros(N_sim * m)
-        T_res = np.zeros(N_sim * m)
+
         for i_u in range(k_max):
 
             Y_cj = np.zeros(N)
             for j in range(m):
-
+                Xj = T_res[k*m + j]
                 for l_hor in range(N):
                     Y_cj[l_hor] = T_mod[j * (N_sim + N) + k + l_hor]
 
-                Xj = T_init[j]
+
                 Aj = 1 - dt * (1 / tau_th[j])
                 Fj = np.asarray([Aj ** (i + 1) for i in range(N)]).T
                 Textj = np.asarray([np.zeros(N)]).T
@@ -178,6 +181,7 @@ def optim_decen(pb, step, e, k_max=100):
                 Cj = 1
                 ###
                 H_initj = [[Bj]]
+
                 for l_h in range(N - 1):
                     H_initj = np.vstack((np.bmat([H_initj, np.zeros(shape=((l_h + 1), 1))]),
                                          [[Aj ** (l_h + 1 - x) * (Bj) for x in range(0, l_h + 2)]]))
@@ -216,10 +220,6 @@ def optim_decen(pb, step, e, k_max=100):
                 qj = matrix(q_matjk.T,
                             tc='d')
 
-                mat_j = dict(Aj=Aj, Bj=Bj, Cj=Cj, Fj=Fj, Hj=Hj, Gj=Gj, B_Textj=B_Textj, H_extj=H_extj, c_tj=c_tj, hj=hj,
-                             Dj=Dj, Pj=Pj, qj=qj, Y_cj=Y_cj,
-                             P_matj=P_matj, q_matj=q_matjk)
-                ###
 
                 uk_sol = solvers.qp(Pj, qj, Gj, hj)
 
@@ -234,14 +234,13 @@ def optim_decen(pb, step, e, k_max=100):
                 Aj = 1 - dt * (1 / tau_th[j])
                 Bj = (dt / Cth[j])
                 B_Textj = (dt / tau_th[j])
-                Xj = T_init[j]
-                Xj = Aj * Xj + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
-                T_res[k * m + j] = Xj
+                T_res[(k+1) * m + j] = Aj * T_res[k * m + j] + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
 
+            print(i_u)
             if all(x < e for x in Delta):
+                print('break at %s.' % (i_u))
                 break
 
-        print(k)
     return U, T_res, L, i_u
 
 
@@ -379,14 +378,14 @@ if __name__ == '__main__':
     dt = 0.1  # h
 
     # Horizon
-    N_sim = int(5/dt)
-    N = int(1/dt)
+    N_sim = int(24/dt)
+    N = int(5/dt)
 
     # max energy in kW
-    Umax = 2
+    Umax = 1
 
     # max admissible energy
-    u_m = np.array([1, 1], dtype=float)
+    u_m = np.array([2, 2], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
@@ -394,7 +393,7 @@ if __name__ == '__main__':
     Text = Text_sim[0:m*N]
     Tpres = 22
     Tabs = 18
-    T_init = np.array([0, 0], dtype=float)
+    T_init = np.array([15, 15], dtype=float)
     Rth = np.array([50, 50], dtype=float)
     Cth = np.array([0.056, 0.056], dtype=float)
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
@@ -414,9 +413,8 @@ if __name__ == '__main__':
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
-    U, Tres, L, k = optim_decen(pb, 15, 1.0e-2)
+    U, Tres, L, k = optim_decen(pb, 15, 1.0e-1)
     print(L)
-    print(k)
     plot_t(pb, 0, Tres, U)
 
     #T_res, U = get_Opt_CL(pb)
