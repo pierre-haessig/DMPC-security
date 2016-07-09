@@ -160,19 +160,15 @@ def optim_decen(pb, step, e, k_max=100):
 
     for k in range(N_sim):
         L = np.zeros(N)
-
         U = np.zeros(N_sim * m)
         T_res = np.zeros(N_sim * m)
-
         for i_u in range(k_max):
 
-
             Y_cj = np.zeros(N)
-
             for j in range(m):
 
-                for l in range(N):
-                    Y_cj[l] = T_mod[j * (N_sim + N) + k + l]
+                for l_hor in range(N):
+                    Y_cj[l_hor] = T_mod[j * (N_sim + N) + k + l_hor]
 
                 Xj = T_init[j]
                 Aj = 1 - dt * (1 / tau_th[j])
@@ -182,16 +178,16 @@ def optim_decen(pb, step, e, k_max=100):
                 Cj = 1
                 ###
                 H_initj = [[Bj]]
-                for l in range(N - 1):
-                    H_initj = np.vstack((np.bmat([H_initj, np.zeros(shape=((l + 1), 1))]),
-                                         [[Aj ** (l + 1 - x) * (Bj) for x in range(0, l + 2)]]))
+                for l_h in range(N - 1):
+                    H_initj = np.vstack((np.bmat([H_initj, np.zeros(shape=((l_h + 1), 1))]),
+                                         [[Aj ** (l_h + 1 - x) * (Bj) for x in range(0, l_h + 2)]]))
                 Hj = H_initj
                 ###
                 Gj = matrix(np.vstack((-np.identity(N), np.identity(N))), tc='d')
                 G1 = np.zeros(shape=(N, m * N))
                 for l in range(N):
-                    for k in range(m):
-                        G1[l, l * m + k] = 1
+                    for nb_user in range(m):
+                        G1[l, l * m + nb_user] = 1
                 ###
                 Dj = np.identity(N) * alpha[j]
                 ###
@@ -202,9 +198,9 @@ def optim_decen(pb, step, e, k_max=100):
                 B_Textj = (dt / tau_th[j])
                 ###
                 H_init_Textj = [[B_Textj]]
-                for l in range(N - 1):
-                    H_init_Textj = np.vstack((np.bmat([H_init_Textj, np.zeros(shape=((l + 1), 1))]),
-                                              [[Aj ** (l + 1 - x) * (B_Textj) for x in range(0, l + 2)]]))
+                for l_hp in range(N - 1):
+                    H_init_Textj = np.vstack((np.bmat([H_init_Textj, np.zeros(shape=((l_hp + 1), 1))]),
+                                              [[Aj ** (l_hp + 1 - x) * (B_Textj) for x in range(0, l_hp + 2)]]))
                 H_extj = H_init_Textj
                 ###
 
@@ -213,8 +209,9 @@ def optim_decen(pb, step, e, k_max=100):
                 P_matj = 2 * (Hj.T).dot(Dj.dot(Hj))
                 Pj = matrix(P_matj, tc='d')
 
-                q_matjk = (c_tj + 2 * ((Fj * Xj).T.dot(Dj.dot(Hj))) + 2 * (((H_extj.dot(Textj)).T).dot(Dj.dot(Hj))) - 2 * (
-                    Y_cj.T).dot(Dj.dot(Hj))) + L
+                q_matjk = (c_tj + 2 * ((Fj * Xj).T.dot(Dj.dot(Hj))) + 2 * (
+                    ((H_extj.dot(Textj)).T).dot(Dj.dot(Hj))) - 2 * (
+                               Y_cj.T).dot(Dj.dot(Hj))) + L
 
                 qj = matrix(q_matjk.T,
                             tc='d')
@@ -232,6 +229,7 @@ def optim_decen(pb, step, e, k_max=100):
             Delta[Delta < 0] = 0
             L = L + step * (Delta)
 
+
             for j in range(m):
                 Aj = 1 - dt * (1 / tau_th[j])
                 Bj = (dt / Cth[j])
@@ -240,9 +238,9 @@ def optim_decen(pb, step, e, k_max=100):
                 Xj = Aj * Xj + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
                 T_res[k * m + j] = Xj
 
-
             if all(x < e for x in Delta):
                 break
+
         print(k)
     return U, T_res, L, i_u
 
@@ -385,10 +383,10 @@ if __name__ == '__main__':
     N = int(1/dt)
 
     # max energy in kW
-    Umax = 1
+    Umax = 2
 
     # max admissible energy
-    u_m = np.array([2, 2], dtype=float)
+    u_m = np.array([1, 1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal parameters
