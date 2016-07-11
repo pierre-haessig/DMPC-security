@@ -413,7 +413,7 @@ if __name__ == '__main__':
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
-    U, Tres, L, k = optim_decen(pb, 15, 1.0e-1)
+    U, Tres, L, k = optim_decen(pb, 0.15, 1.0e-1)
     print(L)
     plot_t(pb, 0, Tres, U)
 
