@@ -50,3 +50,42 @@ def test_block_toeplitz():
                   [3, 0, 2, 0, 1, 0, 4, 4],
                   [0, 3, 0, 2, 0, 1, 4, 4]])
         )
+
+def test_pred_mat():
+    '''test prediction matrices on a 1D thermal system'''
+    r_th = 20
+    c_th= 0.02
+    assert r_th * c_th == 0.4 # h
+    dt = 0.2 #h
+    dyn = mpc.dyn_from_thermal(r_th, c_th, dt, "thermal subsys")
+
+    n_hor = int(2.5/dt)
+    assert n_hor == 12
+    t = np.arange(1, n_hor+1)*dt
+    F, Hu, Hp = mpc.pred_mat(n_hor, dyn.A, dyn.C, dyn.Bu, dyn.Bp)
+
+    zn = np.zeros(n_hor)[:,None]
+    T_ext_hor = 2 + zn # °C
+    u_hor = 0 + zn # kW
+    u_hor[t>1] = 1 #kW
+    T0 = 20 # °C
+
+    T_hor = np.dot(F, T0) + np.dot(Hu,u_hor) + np.dot(Hp, T_ext_hor)
+    
+    assert_equal(T_hor.shape, (12,1))
+    
+    assert_allclose9(
+        T_hor,
+        np.array([[ 11.        ],
+                  [  6.5       ],
+                  [  4.25      ],
+                  [  3.125     ],
+                  [  2.5625    ],
+                  [ 12.28125   ], # u becomes 1: T goes up
+                  [ 17.140625  ],
+                  [ 19.5703125 ],
+                  [ 20.78515625],
+                  [ 21.39257812],
+                  [ 21.69628906],
+                  [ 21.84814453]])
+        )

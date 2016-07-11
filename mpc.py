@@ -150,6 +150,53 @@ def block_toeplitz(c, r=None):
     return A
 
 
+def pred_mat(n, A, C, *B_list):
+    '''
+    Construct prediction matrices F, H for horizon n
+    such that y = Fx + H.u
+    
+    Any number of B matrices can be given, which will return an equal
+    number of H matrices
+    
+    TODO: implement case C≠[1]
+    
+    Examples
+    --------
+    >>> F, H = pred_mat(3, np.atleast_2d(0.9), np.atleast_2d(1), np.atleast_2d(0.2))
+    >>> F
+    array([[ 0.9  ],
+           [ 0.81 ],
+           [ 0.729]])
+    >>> H
+    array([[ 0.2  ,  0.   ,  0.   ],
+           [ 0.18 ,  0.2  ,  0.   ],
+           [ 0.162,  0.18 ,  0.2  ]])
+    with 2 B matrices:
+    >>> F, Hu, Hp = pred_mat(3, np.atleast_2d(0.9), np.atleast_2d(1), np.atleast_2d(0.2), np.atleast_2d(0.5))
+    >>> Hp
+    array([[ 0.5  ,  0.   ,  0.   ],
+           [ 0.45 ,  0.5  ,  0.   ],
+           [ 0.405,  0.45 ,  0.5  ]])
+    '''
+    # [A^i] for i=1:n
+    A_pow = [A]
+    for i in range(n-1):
+        A_pow.append(A_pow[-1].dot(A))
+    F = np.vstack(A_pow)
+
+    H_list = []
+    for B in B_list:
+        # [A^i.Bu] for i=0:n-1
+        AB_pow = [B]
+        AB_pow.extend([Ai.dot(B) for Ai in A_pow[:-1]])
+        
+        H = block_toeplitz(AB_pow, np.zeros(n))
+        H_list.append(H)
+    
+    return (F,) + tuple(H_list)
+
+
+
 class MPC(object):
     '''MPC controller
     
@@ -165,7 +212,7 @@ class MPC(object):
         self.track_weight = track_weight
         
         # Prediction matrices
-        F, Hu, Hp = self.pred_mat(nh, dyn.A, dyn.C, dyn.Bu, dyn.Bp)
+        F, Hu, Hp = pred_mat(nh, dyn.A, dyn.C, dyn.Bu, dyn.Bp)
         self.F = F
         self.Hu = Hu
         self.Hp = Hp
@@ -174,51 +221,23 @@ class MPC(object):
         self._update_P()
         self._update_Gh()
     
-    @staticmethod
-    def pred_mat(n, A, C, *B_list):
+    def get_pred_mat(self):
+        return self.F, self.Hu, self.Hp
+    
+    def pred_output(self, x0, u_hor, p_hor):
+        '''predicted future outputs of the system
+        
+        given
+        * initial state `x0` and
+        * predicted inputs `u_hor` and `p_hor` over the horizon
+        
+        formula y = Fx + Hu.u + Hp.p
         '''
-        Construct prediction matrices F, H for horizon n
-        such that y = Fx + H.u
-        
-        Any number of B matrices can be given, which will return an equal
-        number of H matrices
-        
-        TODO: implement case C≠[1]
-        
-        Examples
-        --------
-        >>> F, H = MPC.pred_mat(3, np.atleast_2d(0.9), np.atleast_2d(1), np.atleast_2d(0.2))
-        >>> F
-        array([[ 0.9  ],
-               [ 0.81 ],
-               [ 0.729]])
-        >>> H
-        array([[ 0.2  ,  0.   ,  0.   ],
-               [ 0.18 ,  0.2  ,  0.   ],
-               [ 0.162,  0.18 ,  0.2  ]])
-        with 2 B matrices:
-        >>> F, Hu, Hp = MPC.pred_mat(3, np.atleast_2d(0.9), np.atleast_2d(1), np.atleast_2d(0.2), np.atleast_2d(0.5))
-        >>> Hp
-        array([[ 0.5  ,  0.   ,  0.   ],
-               [ 0.45 ,  0.5  ,  0.   ],
-               [ 0.405,  0.45 ,  0.5  ]])
-        '''
-        # [A^i] for i=1:n
-        A_pow = [A]
-        for i in range(n-1):
-            A_pow.append(A_pow[-1].dot(A))
-        F = np.vstack(A_pow) 
-
-        H_list = []
-        for B in B_list:
-            # [A^i.Bu] for i=0:n-1
-            AB_pow = [B]
-            AB_pow.extend([Ai.dot(B) for Ai in A_pow[:-1]])
-            
-            H = block_toeplitz(AB_pow, np.zeros(n))
-            H_list.append(H)
-        
-        return (F,) + tuple(H_list)
+        F = self.F
+        Hu = self.Hu
+        Hp = self.Hp
+        y_hor = np.dot(F, x0) + np.dot(Hu,u_hor) + np.dot(Hp, p_hor)
+        return y_hor
     
     def _update_P(self):
         track_weight = self.track_weight
