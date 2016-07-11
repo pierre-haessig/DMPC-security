@@ -208,7 +208,7 @@ class MPC(object):
         self.nh = nh
         self.u_min = u_min
         self.u_max = u_max
-        self.u_cost = u_cost
+        self._u_cost = u_cost
         self.track_weight = track_weight
         
         # Prediction matrices
@@ -256,10 +256,10 @@ class MPC(object):
         
         self.q = u_cost + self._q0
     
-    def _update_j0(self, x0, ys_hor, p_hor):
-        j0 = ys_hor.T.dot(ys_hor - 2*(F_x + Hp_p)) + \
-             F_x.T.dot(F_x) + Hp_p.T.dot(Hp_p) + 2*F_x.T.dot(Hp_p)
-        self.j0 = j0*track_weight
+#    def _update_j0(self, x0, ys_hor, p_hor):
+#        j0 = ys_hor.T.dot(ys_hor - 2*(F_x + Hp_p)) + \
+#             F_x.T.dot(F_x) + Hp_p.T.dot(Hp_p) + 2*F_x.T.dot(Hp_p)
+#        self.j0 = j0*track_weight
     
     def _update_Gh(self):
         F = self.F
@@ -306,7 +306,7 @@ class MPC(object):
         '''
         u_cost = self._u_cost
         self._update_q(u_cost, x0, ys_hor, p_hor)
-        self._update_j0(u_cost, x0, ys_hor, p_hor)
+        #self._update_j0(x0, ys_hor, p_hor)
     
     def set_u_cost(self, u_cost):
         '''recompute quadprog matrices with new cost for u'''
