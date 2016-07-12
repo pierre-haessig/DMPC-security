@@ -89,3 +89,8 @@ def test_pred_mat():
                   [ 21.69628906],
                   [ 21.84814453]])
         )
+    # Also check the method of LinDyn
+    F1, Hu1, Hp1 = dyn.pred_mat(n_hor)
+    assert_true(np.all(F==F1))
+    assert_true(np.all(Hu==Hu1))
+    assert_true(np.all(Hp==Hp1))
