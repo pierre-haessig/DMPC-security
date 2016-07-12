@@ -51,6 +51,14 @@ class LinDyn(object):
         'stacked A,Bu,Bp matrices'
         return np.hstack([self.A, self.Bu, self.Bp])
     
+    def pred_mat(self, n):
+        '''Constructs prediction matrices F, Hu, Hp for horizon n
+        such that y = Fx + Hᵤ.u + Hₚ.p
+        
+        see also `pred_mat` function
+        '''
+        return pred_mat(n, self.A, self.C, self.Bu, self.Bp)
+    
     def __str__(self):
         name = '' if self.name is None else "'{}'".format(self.name)
         return 'LinDyn {name} \n  dims x:{0.nx}, u:{0.nu}, p:{0.np}, y:{0.ny}'.format(self, name=name)
@@ -152,7 +160,7 @@ def block_toeplitz(c, r=None):
 
 def pred_mat(n, A, C, *B_list):
     '''
-    Construct prediction matrices F, H for horizon n
+    Constructs prediction matrices F, H for horizon n
     such that y = Fx + H.u
     
     Any number of B matrices can be given, which will return an equal
@@ -212,7 +220,7 @@ class MPC(object):
         self.track_weight = track_weight
         
         # Prediction matrices
-        F, Hu, Hp = pred_mat(nh, dyn.A, dyn.C, dyn.Bu, dyn.Bp)
+        F, Hu, Hp = dyn.pred_mat(nh)
         self.F = F
         self.Hu = Hu
         self.Hp = Hp
@@ -332,4 +340,4 @@ if __name__ == '__main__':
     
     mpc = MPC(dyn, nh=3, u_min=0, u_max=1, u_cost=1, track_weight=100)
     
-    MPC.pred_mat(2, dyn.A, dyn.C, dyn.Bu, dyn.Bp)
+    dyn.pred_mat(2)
