@@ -364,7 +364,7 @@ def plot_t(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     ax2.legend()
     
     ax1.set(
-        ylabel=u'Temperature (°C)'
+        ylabel=u'Temperature (C)'
     )
 
     ax2.set(
@@ -425,7 +425,7 @@ if __name__ == '__main__':
 
 
     # comfort factor
-    alpha = np.array([100, 10], dtype=float)
+    alpha = np.array([10, 10], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)

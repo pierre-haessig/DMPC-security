@@ -30,8 +30,8 @@ def optim_central(pb):
     u_id = (T_id - Text) /Rth
 
     # Matrix definition
-    P = matrix(2 * alpha * np.diag(Rth ** 2), tc='d')
-    q = matrix(1 - 2 * alpha * u_id * (Rth ** 2), tc='d')
+    P = matrix(2 * alpha*np.diag(Rth ** 2), tc='d')
+    q = matrix(1 - 2 * alpha*u_id * (Rth ** 2), tc='d')
     G = matrix(np.vstack((np.ones(len(Rth)), -np.identity(len(Rth)), np.identity(len(Rth)))), tc='d')
     h = matrix(np.hstack((Umax, np.zeros(len(Rth)), u_m)), tc='d')
 
@@ -65,16 +65,16 @@ def optim_decen(pb, step, e, k_max=1000):
     u_id = (T_id - Text) / Rth
 
     L = 0
-    n = len(Rth)
-    u_sol = np.zeros(n)
+    m = len(Rth)
+    u_sol = np.zeros(m)
 
 
     for k in range(k_max):
         assert L >= 0, "u_id can be reached for all users"
-        for j in range(n):
+        for j in range(m):
 
-            Pj = matrix(2 * alpha * Rth[j] ** 2, tc='d')
-            qj = matrix(1 - 2 * alpha * Rth[j]**2 * u_id[j] + L, tc='d')
+            Pj = matrix(2 * alpha[j] * Rth[j] ** 2, tc='d')
+            qj = matrix(1 - 2 * alpha[j] * Rth[j]**2 * u_id[j] + L, tc='d')
             Gj = matrix([-1, 1], tc='d')
             hj = matrix([0, u_m[j]], tc='d')
 
@@ -254,39 +254,33 @@ if __name__ == '__main__':
     ## variable definition
 
     # number of users
-    m = 6
+    m = 3
     i = np.arange(m)
 
     # max energy in kW
-    Umax = 30
-    u_m = np.array([5, 5, 5, 5, 5, 10], dtype=float)
+    Umax = 2
+    u_m = np.array([1, 1, 1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal resistance
     beta = 5  # if higher than 6, the optimization process considers than it isn't necessary to spend enery on room with high Rth
-    Rth = beta / u_m
+    Rth =[10, 10, 10]
 
     # Exterior temperature
     Text = 15
 
     # Ideal temperature in degrees
-    T_id = np.array([21, 22, 21, 21, 21, 25], dtype=float)
+    T_id = np.array([21, 21, 21], dtype=float)
     assert len(T_id) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(T_id))
 
     # Ideal energy
     deltaT = (T_id - Text)
 
     # comfort factor
-    alpha = 100
+    alpha = np.asarray([10, 10, 10])
     #assert len(alpha) == m, "illegal number of alpha. Expecting %s. and received %s." % (m, len(alpha))
 
     pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
-
-
-    u_sol_c = optim_central(pb)
-    print_sol(pb, u_sol_c)
-    plot_sol(pb, u_sol_c)
-
 
 
     u_sol_d = optim_decen(pb, 1.5, 1.0e-2)
