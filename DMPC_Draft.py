@@ -235,10 +235,9 @@ def optim_decen(pb, step, e, k_max=100):
                 U[k * m + j] = np.asarray(uk_sol['x']).T[0][0]
 
 
-
             Delta = G1.dot(U[0:N * m]) - Umax
-            Delta[Delta < 0] = 0
-            L = L + step * (Delta)
+            L = L + step * Delta
+            L[L<0] = 0
 
 
             for j in range(m):
