@@ -13,6 +13,10 @@ import numpy as np
 def assert_allclose9(a,b):
     return assert_allclose(a, b, 1e-9, 1e-9)
 
+def assert_allclose6(a,b):
+    return assert_allclose(a, b, 1e-6, 1e-6)
+
+
 import mpc
 
 def test_dyn_from_thermal():
@@ -51,13 +55,19 @@ def test_block_toeplitz():
                   [0, 3, 0, 2, 0, 1, 4, 4]])
         )
 
-def test_pred_mat():
-    '''test prediction matrices on a 1D thermal system'''
+def get_dyn():
+    '''creates a LinDyn instance'''
     r_th = 20
     c_th= 0.02
     assert r_th * c_th == 0.4 # h
     dt = 0.2 #h
     dyn = mpc.dyn_from_thermal(r_th, c_th, dt, "thermal subsys")
+    
+    return dyn, dt
+
+def test_pred_mat():
+    '''test prediction matrices on a 1D thermal system'''
+    dyn, dt = get_dyn()
 
     n_hor = int(2.5/dt)
     assert n_hor == 12
@@ -98,3 +108,47 @@ def test_pred_mat():
     
     # Also check the pred_output method of MPC
     #assert_true(np.all(T_hor, ctrl.pred_output(T0, u_hor, T_ext_hor)))
+
+def test_MPC_solve_u_opt():
+    '''test of MPC.solve_u_opt() method (calls cvxopt)'''
+    dyn, dt = get_dyn()
+
+    n_hor = int(2.5/dt)
+    assert n_hor == 12
+    
+    u_max = 1.2 #kW
+    ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
+    
+    t = np.arange(1, n_hor+1)*dt
+
+    zn = np.zeros(n_hor)[:,None]
+    T_ext_hor = 2 + zn # °C
+    
+    Ts_hor = 18 + zn # °C
+    Ts_hor[5:] = 22 # °C ()
+    
+    T0 = 20 # °C
+    
+    ctrl.set_xyp(T0, Ts_hor, T_ext_hor)
+    
+    u_opt = ctrl.solve_u_opt()
+    
+    assert_equal(u_opt.shape, (n_hor,1))
+    
+    u_expected = np.array([
+        [ 0.699975  ],
+        [ 0.7999874 ], # steady state at 0.8 kW
+        [ 0.79998745],
+        [ 0.79998745],
+        [ 0.79999736],
+        [ 1.19996276], # peak at u_max
+        [ 0.99999722], # steady state at 1 kW
+        [ 0.9999874 ],
+        [ 0.9999874 ],
+        [ 0.9999874 ],
+        [ 0.9999874 ],
+        [ 0.9999622 ]])
+        
+    print((u_opt - u_expected))
+    
+    assert_allclose6(u_opt, u_expected)
