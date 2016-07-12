@@ -131,7 +131,7 @@ def optim_central(mat):
 
     return u_sol, prime_obj
 
-def optim_decen(pb, step, e, k_max=10):
+def optim_decen(pb, step, e, k_max=100):
     """ Distributed optimization for power allocation
 
           optim_decen(object)
@@ -230,13 +230,11 @@ def optim_decen(pb, step, e, k_max=10):
                 ((H_extj*Textj).T).dot(Dj.dot(Fj)) - Y_cj.T.dot(Dj.T.dot(Fj)))*Xj + (H_extj*Textj).T.dot(
                     Dj.dot(H_extj*Textj)) - 2 * Y_cj.T.dot(Dj.T.dot(H_extj*Textj)) + Y_cj.T.dot(Dj*Y_cj)
 
-                cte_N[k] = cte_N[k] + ctej[0,0]
-
                 uk_sol = solvers.qp(Pj, qj, Gj, hj)
 
                 U[k * m + j] = np.asarray(uk_sol['x']).T[0][0]
 
-                J_u[k] = J_u[k] + cte_N[k] + uk_sol['primal objective']
+
 
             Delta = G1.dot(U[0:N * m]) - Umax
             Delta[Delta < 0] = 0
@@ -256,6 +254,18 @@ def optim_decen(pb, step, e, k_max=10):
 
         Lgrn_mult[k] = L[0]
         cost[k] = sum(U[k*m:k*m + m])
+
+        Gu = np.zeros(shape=(N_sim, m * N_sim))
+        for l in range(N_sim):
+            for nb_user in range(m):
+                Gu[l, l * m + nb_user] = 1
+
+        comfort = np.zeros(N_sim)
+        for hor in range(N_sim):
+            comfort[hor] = sum((T_res[k_room +  hor* m] - T_id_pred[k_room + hor * m]) ** 2 for k_room in range(m))
+
+        J_u = Gu.dot(U) + comfort
+
     return U, T_res, Lgrn_mult, cost, J_u
 
 def get_temp_op_OL(pb, mat,  u_sol):
@@ -387,7 +397,7 @@ if __name__ == '__main__':
     N = int(5/dt)
 
     # max energy in kW
-    Umax = 1
+    Umax = 3
 
     # max admissible energy
     u_m = np.array([2, 2], dtype=float)
@@ -412,7 +422,7 @@ if __name__ == '__main__':
 
 
     # comfort factor
-    alpha = np.array([100, 100], dtype=float)
+    alpha = np.array([100, 10], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
@@ -422,7 +432,7 @@ if __name__ == '__main__':
     pb['T_init'] = T_init
     U, T_res, L, cost, J_u= optim_decen(pb, 0.15, 1.0e-1)
     plot_t(pb, 0, T_res, U, T_cen, U_cen)
-
+    print(J_u)
 
     #mat = mat_def(pb)
     #print(mat)
