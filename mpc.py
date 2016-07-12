@@ -29,32 +29,34 @@ class LinDyn(object):
         '''
         self.name = name
         
-        nx = A.shape[0]
         assert A.shape[0] == A.shape[1]
+        self.nx = A.shape[0] 
         
-        nu = Bu.shape[1]
         assert Bu.shape[0] == A.shape[0]
+        self.nu = Bu.shape[1]
         
-        np = Bp.shape[1]
         assert Bp.shape[0] == A.shape[0]
+        self.np = Bp.shape[1]
         
-        ny = C.shape[0]
         assert C.shape[1] == A.shape[1]
-        
+        self.ny = C.shape[0]
         
         self.A = A
         self.Bu = Bu
         self.Bp = Bp
         self.C = C
-        
-        self.nx = nx
-        self.nu = nu
-        self.np = np
-        self.ny = ny
 
     def get_AB(self):
         'stacked A,Bu,Bp matrices'
         return np.hstack([self.A, self.Bu, self.Bp])
+    
+    def x_next(self, x, u, p):
+        '''next state x⁺ = A.x + Bᵤ.u + Bₚ.p'''
+        return self.A.dot(x) + self.Bu.dot(u) + self.Bp.dot(p)
+    
+    def y(self, x):
+        '''output y=C.x'''
+        return self.C.dot(x)
     
     def pred_mat(self, n):
         '''Constructs prediction matrices F, Hu, Hp for horizon n
@@ -66,7 +68,7 @@ class LinDyn(object):
     
     def __str__(self):
         name = '' if self.name is None else "'{}'".format(self.name)
-        return 'LinDyn {name} \n  dims x:{0.nx}, u:{0.nu}, p:{0.np}, y:{0.ny}'.format(self, name=name)
+        return 'LinDyn {name} \n  dims x:{0.n_x}, u:{0.n_u}, p:{0.n_p}, y:{0.n_y}'.format(self, name=name)
 
 
 def dyn_from_thermal(r_th, c_th, dt, name=None):
@@ -354,28 +356,138 @@ class MPC(object):
             return u_opt, sol
         return u_opt
 
+    def closed_loop_sim(self, x0, n_sim, dyn, ys_fcast, p_fcast):
+        '''Simulates the MPC in closed loop
+        
+        Dynamics `dyn` can be the same as `self.dyn`, or different
+        (e.g. to investigate the effect modeling errors)
+        
+        Returns u, p, x, y
+        '''
+        A = dyn.A
+        Bu = dyn.Bu
+        Bp = dyn.Bp
+        C = dyn.C
+        
+        n_x = A.shape[0]
+        n_y = C.shape[0]
+        n_u = Bu.shape[1]
+        n_p = Bp.shape[1]
+        assert x0.shape == (n_x,1) or x0.shape == (n_x,)
+        
+        u = np.zeros((n_sim, n_u))
+        p = np.zeros((n_sim, n_p))
+        x = np.zeros((n_sim, n_x))
+        y = np.zeros((n_sim, n_y))
+        x[0] = x0
+        
+        for k in range(n_sim):
+            p_hor = p_fcast.pred(k, nh)
+            
+            # TODO: fix the semantics. Output forecast should be k+1:k+1:nh | k
+            ys_hor = ys_fcast.pred(k, nh)
+            
+            x_k = x[k]
+            y[k] = dyn.y(x_k)
+            
+            # mpc:
+            self.set_xyp(x_k, ys_hor, p_hor)
+            u_hor = self.solve_u_opt()
+            
+            u[k] = u_hor[0]
+            p[k] = p_fcast.real(k)
+            
+            if k+1<n_sim:
+                x[k+1] = dyn.x_next(x_k, u[k], p[k])
+        # end for each instant k
+        
+        return u, p, x, y
+
+
+class Oracle(object):
+    '''Perfect predictor of signal y
+    '''
+    def __init__(self, y):
+        self.y = y
+    
+    def pred(self, k, n):
+        '''n future values of y, starting from instant k: 
+        
+            y[k:k+n]
+        '''
+        return self.y[k:k+n]
+    
+    def real(self, k):
+        '''real value (realization) of y at instant k'''
+        return self.y[k]
+
+
+class ConstOracle(Oracle):
+    '''Perfect predictor of constant signal yc
+    '''
+    def __init__(self, yc):
+        self.yc = yc
+    
+    def pred(self, k, n):
+        '''n future values of y from instant k: y[k:k+(n-1)]
+        '''
+        return self.yc + np.zeros(n)
+    
+    def real(self, k):
+        '''real value (realization) of y at instant k'''
+        return np.atleast_1d(self.yc)
+
+
 
 if __name__ == '__main__':
-    A = np.array([[1]], dtype=float)
-    Bu = np.array([[1]], dtype=float)
-    Bp = np.array([[1]], dtype=float)
-    C = np.array([[1]], dtype=float)
+    import matplotlib.pyplot as plt
     
-    dyn = LinDyn(A, Bu, Bp, C, name='SISO')
-    print(dyn)
+    dt = 0.1 # h
+    dyn = dyn_from_thermal(r_th=20, c_th=0.1, dt=dt)
     
-    dyn = dyn_from_thermal(5, 1, 0.1)
-    dyn.pred_mat(2)
+    nh = int(10/dt)
+    ctrl = MPC(dyn, nh, u_min=0, u_max=1.5, u_cost=1, track_weight=100)
     
-    nh = 3
-    ctrl = MPC(dyn, nh, u_min=0, u_max=1, u_cost=1, track_weight=100)
     
-    T0 = 20# °C
+    T0 = np.atleast_2d(20)# °C
+    
+    # check MPC output at one time step:
     zn = np.zeros(nh)[:,None]
     T_ext_hor = 2 + zn # °C
     Ts_hor = 18 + zn # °C
-    Ts_hor[2] = 22 # °C
+    Ts_hor[nh//2:] = 22 # °C
     
     ctrl.set_xyp(T0, Ts_hor, T_ext_hor)
     u_opt = ctrl.solve_u_opt()
-    ctrl.pred_output(T0, u_opt, T_ext_hor)
+    
+    T_pred = ctrl.pred_output(T0, u_opt, T_ext_hor)
+    
+    t_hor = np.arange(nh)*dt
+    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+    ax1.plot(t_hor+dt, Ts_hor, 'k:', label='set point')
+    ax1.plot(t_hor+dt, T_pred, 'g+-', label='MPC pred')
+    ax1.plot(0, T0, 'gD')
+    ax1.legend()
+        
+    ax2.plot(t_hor, u_opt, 'r+-')
+    
+    
+    ### Closed loop simulation
+    n_sim = int(24/dt)
+    
+    Ts_fcast_arr = 18 + np.zeros(n_sim+nh) # °C
+    Ts_fcast_arr[n_sim//2:] = 22 # °C
+    Ts_fcast = Oracle(Ts_fcast_arr)
+    
+    T_ext_fcast = ConstOracle(2) # °C
+    
+    u, p, x, y = ctrl.closed_loop_sim(T0, n_sim, dyn, Ts_fcast, T_ext_fcast)
+    
+    t_sim = np.arange(n_sim)*dt
+    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+    ax1.plot(t_sim+dt, Ts_fcast_arr[0:n_sim], 'k:', label='set point')
+    ax1.plot(t_sim, y, 'g+-', label='T')
+    ax1.plot(0, T0, 'gD')
+    ax1.legend()
+    
+    ax2.plot(t_sim, u, 'r+-')
