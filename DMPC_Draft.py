@@ -397,7 +397,7 @@ if __name__ == '__main__':
     N = int(5/dt)
 
     # max energy in kW
-    Umax = 4
+    Umax = 3
 
     # max admissible energy
     u_m = np.array([2, 2], dtype=float)
@@ -422,7 +422,7 @@ if __name__ == '__main__':
 
 
     # comfort factor
-    alpha = np.array([100, 100], dtype=float)
+    alpha = np.array([100, 10], dtype=float)
 
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
