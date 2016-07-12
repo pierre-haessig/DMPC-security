@@ -334,7 +334,7 @@ def get_Opt_CL(pb):
 
     return T_res, U
 
-def plot_t(pb, i, T_opt, u_sol, T_opt2, u_sol2):
+def plot_t(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     """
     DynamicOpt.plot_traj(object)
     Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
@@ -353,20 +353,23 @@ def plot_t(pb, i, T_opt, u_sol, T_opt2, u_sol2):
 
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(6,4))
 
-    ax1.plot(t, [T_id_pred[i*N_sim + j] for j in range(N_sim)])
-    ax1.plot(t, [T_opt[m*j+i] for j in range(N_sim)])
-    ax1.plot(t, [T_opt2[m * j + i] for j in range(N_sim)], '--')
+    ax1.plot(t, [T_id_pred[i*N_sim + j] for j in range(N_sim)], 'k:',
+             label='T_id')
+    ax1.plot(t, [T_opt[m*j+i] for j in range(N_sim)], label=lab1)
+    ax1.plot(t, [T_opt2[m * j + i] for j in range(N_sim)], '--', label=lab2)
+    ax1.legend()
 
-    ax2.plot(t, [u_sol[m*j+i] for j in range(N_sim)], 'r')
-    ax2.plot(t, [u_sol2[m * j + i] for j in range(N_sim)], '--')
-
+    ax2.plot(t, [u_sol[m*j+i] for j in range(N_sim)], label=lab1)
+    ax2.plot(t, [u_sol2[m * j + i] for j in range(N_sim)], '--', label=lab2)
+    ax2.legend()
+    
     ax1.set(
-        ylabel='Temperature (deg C)'
+        ylabel=u'Temperature (°C)'
     )
 
     ax2.set(
-        xlabel='t(h)',
-        ylabel='Power(kW)'
+        xlabel='t (h)',
+        ylabel='Power (kW)'
     )
 
     fig.tight_layout()
@@ -431,7 +434,7 @@ if __name__ == '__main__':
     T_cen, U_cen =get_Opt_CL(pb)
     pb['T_init'] = T_init
     U, T_res, L, cost, J_u= optim_decen(pb, 0.15, 1.0e-1)
-    plot_t(pb, 0, T_res, U, T_cen, U_cen)
+    plot_t(pb, 0, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
     print(J_u)
 
     #mat = mat_def(pb)
