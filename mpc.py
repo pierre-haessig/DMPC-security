@@ -7,6 +7,11 @@
 from __future__ import division, print_function, unicode_literals
 import numpy as np
 
+import warnings
+import cvxopt
+
+cvxopt.solvers.options['show_progress'] = False
+
 
 class LinDyn(object):
     "Dynamics of a discrete time linear system (LTI)"
@@ -271,12 +276,14 @@ class MPC(object):
     
     def _update_Gh(self):
         F = self.F
+        u_min = self.u_min
         u_max = self.u_max
-        # TODO: fix u_min != 0
+
         n = F.shape[0]
         In = np.identity(n)
         self.G = np.vstack((-In, In))
-        self.h = np.hstack((np.zeros(n), np.ones(n) * u_max))
+        ones_n = np.ones(n)
+        self.h = np.hstack((-u_min*ones_n, u_max*ones_n))
     
 #    @staticmethod
 #    def qp_mat(F, Hu, Hp, x0, u_cost, track_weight):
@@ -321,9 +328,30 @@ class MPC(object):
         self._u_cost = u_cost
         self._update_q(u_cost)
     
-    def solve_u_opt(self):
-        ''''''
-        u_opt = solvers.qp(self.P, self.q, self.G, self.h)
+    def solve_u_opt(self, full_output=False):
+        '''solves for best sequence of inputs `u` over horizon `self.nh`
+        by solving the minization problem.
+        
+        Solver used: `cvxopt.solvers.qp`
+        
+        Returns
+        -------
+        u_opt : sequence (column vector).
+        If `full_output`, returns `u_opt` and also output dict of qp solver
+        
+        '''
+        matrix = cvxopt.matrix
+        cxP = matrix(self.P)
+        cxq = matrix(self.q)
+        cxG = matrix(self.G)
+        cxh = matrix(self.h)
+        sol = cvxopt.solvers.qp(cxP, cxq, cxG, cxh)
+        if not sol['status'] == 'optimal':
+            msg = "cvxopt.solvers.qp didn't converged (return status '{}')".format(sol['status'])
+            warnings.warn(msg)
+        u_opt = np.array(sol['x'])
+        if full_output:
+            return u_opt, sol
         return u_opt
 
 
@@ -337,7 +365,17 @@ if __name__ == '__main__':
     print(dyn)
     
     dyn = dyn_from_thermal(5, 1, 0.1)
-    
-    mpc = MPC(dyn, nh=3, u_min=0, u_max=1, u_cost=1, track_weight=100)
-    
     dyn.pred_mat(2)
+    
+    nh = 3
+    ctrl = MPC(dyn, nh, u_min=0, u_max=1, u_cost=1, track_weight=100)
+    
+    T0 = 20# °C
+    zn = np.zeros(nh)[:,None]
+    T_ext_hor = 2 + zn # °C
+    Ts_hor = 18 + zn # °C
+    Ts_hor[2] = 22 # °C
+    
+    ctrl.set_xyp(T0, Ts_hor, T_ext_hor)
+    u_opt = ctrl.solve_u_opt()
+    ctrl.pred_output(T0, u_opt, T_ext_hor)

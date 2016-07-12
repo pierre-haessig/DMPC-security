@@ -70,7 +70,7 @@ def test_pred_mat():
     u_hor[t>1] = 1 #kW
     T0 = 20 # °C
 
-    T_hor = np.dot(F, T0) + np.dot(Hu,u_hor) + np.dot(Hp, T_ext_hor)
+    T_hor = np.dot(F, T0) + np.dot(Hu, u_hor) + np.dot(Hp, T_ext_hor)
     
     assert_equal(T_hor.shape, (12,1))
     
@@ -89,8 +89,12 @@ def test_pred_mat():
                   [ 21.69628906],
                   [ 21.84814453]])
         )
+    
     # Also check the method of LinDyn
     F1, Hu1, Hp1 = dyn.pred_mat(n_hor)
     assert_true(np.all(F==F1))
     assert_true(np.all(Hu==Hu1))
     assert_true(np.all(Hp==Hp1))
+    
+    # Also check the pred_output method of MPC
+    #assert_true(np.all(T_hor, ctrl.pred_output(T0, u_hor, T_ext_hor)))
