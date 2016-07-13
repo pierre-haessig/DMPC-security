@@ -81,7 +81,7 @@ def dyn_from_thermal(r_th, c_th, dt, name=None):
     A = np.diag(1 -dt/tau)
     Bu = np.diag(dt/c_th)
     B_Text = np.diag(dt/tau)
-    C = np.atleast_2d(1.)
+    C = np.identity(len(c_th))
     
     return LinDyn(A, Bu, B_Text, C, name=name)
 

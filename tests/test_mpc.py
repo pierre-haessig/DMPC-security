@@ -25,6 +25,13 @@ def test_dyn_from_thermal():
     assert_equal(dyn.Bu, 0.1)
     assert_equal(dyn.Bp, 0.02)
     assert_equal(dyn.C, 1)
+    
+    dyn2 = mpc.dyn_from_thermal([5,5], [1,1], dt=0.1)
+    I2 = np.identity(2)
+    assert_allclose9(dyn2.A, 0.98*I2)
+    assert_allclose9(dyn2.Bu, 0.1*I2)
+    assert_allclose9(dyn2.Bp, 0.02*I2)
+    assert_allclose9(dyn2.C, I2)
 
 def test_block_toeplitz():
     assert_allclose9(
