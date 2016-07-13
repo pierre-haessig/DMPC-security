@@ -389,6 +389,8 @@ class MPC(object):
         Bp = dyn.Bp
         C = dyn.C
         
+        nh = self.nh
+        
         n_x = A.shape[0]
         n_y = C.shape[0]
         n_u = Bu.shape[1]
@@ -467,7 +469,7 @@ if __name__ == '__main__':
     dt = 0.1 # h
     dyn = dyn_from_thermal(r_th=20, c_th=0.1, dt=dt)
     
-    nh = int(10/dt)
+    nh = int(2/dt)
     ctrl = MPC(dyn, nh, u_min=0, u_max=1.5, u_cost=1, track_weight=100)
     
     
@@ -486,15 +488,25 @@ if __name__ == '__main__':
     
     t_hor = np.arange(nh)*dt
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
+    
     ax1.plot(t_hor+dt, Ts_hor, 'k:', label='set point')
-    ax1.plot(t_hor+dt, T_pred, 'g+-', label='MPC pred')
+    ax1.plot(t_hor+dt, T_pred, 'g+-', label='MPC prediction')
     ax1.plot(0, T0, 'gD')
+    
+    ax1.set(
+        title = 'MPC sequence at one step (dt={:.1f}h, nh={})'.format(dt,nh),
+        ylabel = u'temperature (°C)'
+        )
     ax1.legend()
         
     ax2.plot(t_hor, u_opt, 'r+-')
+    ax2.set(
+        xlabel = 'time (h)',
+        ylabel = u'heating (kW)'
+        )
     
     ### Closed loop simulation
-    n_sim = int(24/dt)
+    n_sim = int(6/dt)
     
     Ts_fcast_arr = 18 + np.zeros(n_sim+nh) # °C
     Ts_fcast_arr[n_sim//2:] = 22 # °C
@@ -508,9 +520,20 @@ if __name__ == '__main__':
     
     t_sim = np.arange(n_sim)*dt
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
-    ax1.plot(t_sim, ys, 'k:', label='T sp')
-    ax1.plot(t_sim, y, 'g+-', label='T')
+    ax1.plot(t_sim, ys, 'k:', label='T set point')
+    ax1.plot(t_sim, y, 'g+-', label='T_sim')
     ax1.plot(0, T0, 'gD')
+    
+    ax1.set(
+        title = 'MPC in closed loop (dt={:.1f}h, nh={}, n_sim={})'.format(dt,nh, n_sim),
+        ylabel = u'temperature (°C)'
+        )
     ax1.legend()
     
     ax2.plot(t_sim, u, 'r+-')
+    ax2.set(
+        xlabel = 'time (h)',
+        ylabel = u'heating (kW)'
+        )
+    
+    plt.show()
