@@ -283,12 +283,6 @@ def param_alpha(pb, a_beg, a_end, nbr):
 
 
 def plot_alpha(_U, _DT, alpha_ratio):
-    # graph colors (hexadecimal RRGGBB)
-        c = {
-            'max': '#bbd5f0',  # white blue
-            'id': '#4582c2',  # blue
-            'opt': '#f9d600'  # golden yellow
-        }
 
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
