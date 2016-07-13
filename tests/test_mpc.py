@@ -129,17 +129,17 @@ class test_MPC():
         self.dyn2 = mpc.dyn_from_thermal([r_th]*2, [c_th]*2, dt, "2d thermal 1hour")
     
     def test_pred_output(self):
-        '''test MPC.pred_output method'''
+        '''test MPC.pred_output method for 2d system'''
         dt = self.dt
-        dyn = self.dyn2
+        dyn2 = self.dyn2
         n_sys = 2
-        assert n_sys == dyn.nx
+        assert n_sys == dyn2.nx
         
         n_hor = int(2.5/dt)
         assert n_hor == 12
         
         u_max = 1.2 #kW
-        c2 = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
+        c2 = mpc.MPC(dyn2, n_hor, 0, u_max, 1, 100)
         
         # input predictions. needs to be flattened
         T_ext_hor = 2+np.zeros((n_hor, n_sys)) # °C
@@ -184,8 +184,6 @@ class test_MPC():
         
         u_max = 1.2 #kW
         ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
-        
-        t = np.arange(1, n_hor+1)*dt
 
         zn = np.zeros(n_hor)[:,None]
         T_ext_hor = 2 + zn # °C
@@ -218,7 +216,55 @@ class test_MPC():
         print((u_opt - u_expected))
         
         assert_allclose6(u_opt, u_expected)
+    
+    def test_MPC_solve_u_opt_2d(self):
+        '''test of MPC.solve_u_opt() method for 2d system'''
+        dt = self.dt
+        dyn2 = self.dyn2
+        n_sys = 2
+        assert n_sys == dyn2.nx
+        
+        n_hor = int(2.5/dt)
+        assert n_hor == 12
+        
+        u_max = 1.2 #kW
+        c2 = mpc.MPC(dyn2, n_hor, 0, u_max, 1, 100)
+        
+        # input predictions. needs to be flattened
+        T_ext_hor = 2+np.zeros((n_hor, n_sys)) # °C
+        T_ext_hor = T_ext_hor.reshape((n_hor * n_sys, 1))
+        
+        Ts_hor = 18 + np.zeros((n_hor, n_sys)) # °C
+        Ts_hor[n_hor//2:] = 22 # °C
+        Ts_hor = Ts_hor.reshape((n_hor * n_sys, 1))
+        
+        T0 = np.array([20,10]).reshape((n_sys,1))
 
+        c2.set_xyp(T0, Ts_hor, T_ext_hor)
+
+        u_opt = c2.solve_u_opt()
+        assert_equal(u_opt.shape, (n_hor * n_sys, 1))
+        
+        u_opt = c2.solve_u_opt(reshape_2d=True)
+        assert_equal(u_opt.shape, (n_hor, n_sys))
+
+        u_expected = np.array([
+            [ 0.39993771,  1.19999994],
+            [ 0.79998731,  1.19999975],
+            [ 0.79998749,  1.19994822],
+            [ 0.7999875 ,  0.83837907],
+            [ 0.79998827,  0.80037647],
+            [ 1.1215989 ,  1.12105229],
+            [ 1.19999977,  1.19999963],
+            [ 1.19999867,  1.19999681],
+            [ 1.0593051 ,  1.05942779],
+            [ 0.99998763,  0.99998742], # steady state at 1 kW
+            [ 0.99998749,  0.9999875 ],
+            [ 0.99973719,  0.99973719]])
+        
+        print(repr(u_opt))
+        
+        assert_allclose6(u_opt, u_expected)
 
     def test_MPC_closed_loop_sim(self):
         '''test MPC.closed_loop_sim() method on a short simulation'''
