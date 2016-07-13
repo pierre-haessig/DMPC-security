@@ -255,12 +255,15 @@ class MPC(object):
     def get_pred_mat(self):
         return self.F, self.Hu, self.Hp
     
-    def pred_output(self, x0, u_hor, p_hor):
+    def pred_output(self, x0, u_hor, p_hor, reshape_2d=False):
         '''predicted future outputs of the system
         
         given
         * initial state `x0` and
         * predicted inputs `u_hor` and `p_hor` over the horizon
+        
+        if `reshape_2d` is True, returns a (nh,ny) array instead of the flat
+        (nh*ny,1) column vector (default).
         
         formula y = Fx + Hu.u + Hp.p
         '''
@@ -268,6 +271,10 @@ class MPC(object):
         Hu = self.Hu
         Hp = self.Hp
         y_hor = np.dot(F, x0) + np.dot(Hu,u_hor) + np.dot(Hp, p_hor)
+        
+        if reshape_2d:
+            y_hor = y_hor.reshape((self.nh, self.dyn.ny))
+        
         return y_hor
     
     def _update_P(self):
@@ -281,11 +288,14 @@ class MPC(object):
             F = self.F
             Hu = self.Hu
             Hp = self.Hp
-            F_x = F.dot(x0)
-            Hp_p = Hp.dot(p_hor)
+            F_x = F.dot(x0).reshape(-1)
+            Hp_p = Hp.dot(p_hor).reshape(-1)
+            ys_hor = ys_hor.reshape(-1)
             self._q0 = 2*track_weight*(Hu.T).dot(F_x + Hp_p - ys_hor)
         
-        self.q = u_cost + self._q0
+        q = u_cost + self._q0
+        assert q.shape == (q.size, 1) or q.ndim == 1
+        self.q = q
     
 #    def _update_j0(self, x0, ys_hor, p_hor):
 #        j0 = ys_hor.T.dot(ys_hor - 2*(F_x + Hp_p)) + \
@@ -346,7 +356,7 @@ class MPC(object):
         self._u_cost = u_cost
         self._update_q(u_cost)
     
-    def solve_u_opt(self, full_output=False):
+    def solve_u_opt(self, full_output=False, reshape_2d=False):
         '''solves for best sequence of inputs `u` over horizon `self.nh`
         by solving the minization problem.
         
@@ -355,7 +365,9 @@ class MPC(object):
         Returns
         -------
         u_opt : sequence (column vector).
-        If `full_output`, returns `u_opt` and also output dict of qp solver
+        If `full_output`, returns `u_opt` and also output dict of qp solver.
+        If `reshape_2d` is True, returns a (nu,ny) array instead of the flat
+        (nu*ny,1) column vector (default).
         
         '''
         matrix = cvxopt.matrix
@@ -368,6 +380,10 @@ class MPC(object):
             msg = "cvxopt.solvers.qp didn't converged (return status '{}')".format(sol['status'])
             warnings.warn(msg)
         u_opt = np.array(sol['x'])
+        
+        if reshape_2d:
+            u_opt = u_opt.reshape((self.nh, self.dyn.nu))
+        
         if full_output:
             return u_opt, sol
         return u_opt
@@ -439,27 +455,34 @@ class Oracle(object):
         
             y[k:k+n]
         '''
-        return self.y[k:k+n]
+        return self.y[k:k+n].reshape((-1,1))
     
     def real(self, k):
         '''real value (realization) of y at instant k'''
-        return self.y[k]
+        return self.y[k].reshape((-1,1))
 
 
 class ConstOracle(Oracle):
     '''Perfect predictor of constant signal yc
     '''
     def __init__(self, yc):
-        self.yc = yc
+        self.yc = np.array(yc).ravel()
+        self.ny = len(self.yc)
     
-    def pred(self, k, n):
-        '''n future values of y from instant k: y[k:k+(n-1)]
+    def pred(self, k, nh, flat=True):
+        '''nh future values of y from instant k: y[k:k+nh]
         '''
-        return self.yc + np.zeros(n)
+        z_nh = np.zeros((nh, 1))
+        y_hor_2d = self.yc + z_nh
+        if flat:
+            y_hor = y_hor_2d.reshape((-1, 1))
+        else:
+            y_hor = y_hor_2d
+        return y_hor
     
     def real(self, k):
         '''real value (realization) of y at instant k'''
-        return np.atleast_1d(self.yc)
+        return self.yc.reshape((-1,1))
 
 
 

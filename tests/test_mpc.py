@@ -71,7 +71,7 @@ def get_dyn(c_th):
     return dyn, dt
 
 def test_pred_mat():
-    '''test prediction matrices on a 1D thermal system'''
+    '''test prediction matrices on a 2D thermal system'''
     dyn, dt = get_dyn(c_th = 0.02) # 0.4 h time constant
 
     n_hor = int(2.5/dt)
@@ -110,127 +110,189 @@ def test_pred_mat():
     assert_true(np.all(F==F1))
     assert_true(np.all(Hu==Hu1))
     assert_true(np.all(Hp==Hp1))
-    
-    # Also check the pred_output method of MPC
-    #assert_true(np.all(T_hor, ctrl.pred_output(T0, u_hor, T_ext_hor)))
 
-def test_MPC_solve_u_opt():
-    '''test of MPC.solve_u_opt() method (calls cvxopt)'''
-    dyn, dt = get_dyn(c_th = 0.02) # 0.4 h time constant
 
-    n_hor = int(2.5/dt)
-    assert n_hor == 12
-    
-    u_max = 1.2 #kW
-    ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
-    
-    t = np.arange(1, n_hor+1)*dt
-
-    zn = np.zeros(n_hor)[:,None]
-    T_ext_hor = 2 + zn # °C
-    
-    Ts_hor = 18 + zn # °C
-    Ts_hor[5:] = 22 # °C ()
-    
-    T0 = 20 # °C
-    
-    ctrl.set_xyp(T0, Ts_hor, T_ext_hor)
-    
-    u_opt = ctrl.solve_u_opt()
-    
-    assert_equal(u_opt.shape, (n_hor,1))
-    
-    u_expected = np.array([
-        [ 0.699975  ],
-        [ 0.7999874 ], # steady state at 0.8 kW
-        [ 0.79998745],
-        [ 0.79998745],
-        [ 0.79999736],
-        [ 1.19996276], # peak at u_max
-        [ 0.99999722], # steady state at 1 kW
-        [ 0.9999874 ],
-        [ 0.9999874 ],
-        [ 0.9999874 ],
-        [ 0.9999874 ],
-        [ 0.9999622 ]])
+class test_MPC():
+    '''Tests for MPC class'''
+    def __init__(self):
+        dt = 0.2 #h
+        r_th = 20
+        c_th = 0.05 # 1 h time constant
+        self.dt = dt
+        self.r_th = r_th
+        self.c_th = c_th
         
-    print((u_opt - u_expected))
-    
-    assert_allclose6(u_opt, u_expected)
-
-
-def test_MPC_closed_loop_sim():
-    '''test MPC.closed_loop_sim() method on a short simulation'''
-    dyn, dt = get_dyn(c_th = 0.05) # 1.0 h time constant
-
-    n_hor = int(1.5/dt)
-    assert n_hor == 7
-    n_sim = int(3/dt)
-    assert n_sim == 15
-    
-    u_max = 1.2 #kW
-    ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
-
-    Ts_fcast_arr = 18 + np.zeros(n_sim+n_hor) # °C
-    Ts_fcast_arr[n_sim//2:] = 22 # °C
-    Ts_fcast = mpc.Oracle(Ts_fcast_arr)
-    
-    T_ext_fcast = mpc.ConstOracle(2) # °C
-    
-    T0 = np.atleast_2d(20) # °C
-    
-    ctrl.set_oracles(Ts_fcast, T_ext_fcast)
-    
-    u_sim, p, x, T_sim, Ts = ctrl.closed_loop_sim(T0, n_sim)
-    
-    # check consistency of T set point with Oracle input
-    assert_equal(Ts.shape, (n_sim,1))
-    assert_allclose9(Ts, Ts_fcast_arr[0:n_sim, None])
-    
-    # Check temperature output
-    assert_equal(T_sim.shape, (n_sim,1))
-    
-    T_expected = np.array([
-        [ 20.        ], # Ts is 18°
-        [ 17.99975035],
-        [ 17.99974999],
-        [ 17.99974999],
-        [ 17.99974966],
-        [ 17.99975053],
-        [ 19.28619851],
-        [ 20.62895623], # Ts becomes 22°
-        [ 21.70300215],
-        [ 21.99974997],
-        [ 21.99974998],
-        [ 21.99974998],
-        [ 21.99974998],
-        [ 21.99974998],
-        [ 21.99974998]])
-    
-    print((T_sim - T_expected))
-    print(np.hstack((T_sim, T_expected)))
-    
-    assert_allclose6(T_sim, T_expected)
-    
-    # Check MPC control sequence
-    assert_equal(u_sim.shape, (n_sim,1))
-    
-    u_expected = np.array([
-        [ 0.39993759],
-        [ 0.79998743], # steady state at 0.8 kW
-        [ 0.7999875 ],
-        [ 0.79998742],
-        [ 0.7999877 ],
-        [ 1.12159952], # peak at u_max
-        [ 1.19999936],
-        [ 1.19995929],
-        [ 1.05933706],
-        [ 0.9999875 ], # steady state at 1 kW
-        [ 0.9999875 ],
-        [ 0.9999875 ],
-        [ 0.9999875 ],
-        [ 0.9999875 ],
-        [ 0.9999875 ]])
+        # 1D system
+        self.dyn1 = mpc.dyn_from_thermal(r_th, c_th, dt, "1d thermal 1hour")
         
-    print((u_sim - u_expected))
-    assert_allclose6(u_sim, u_expected)
+        # 2D system
+        self.dyn2 = mpc.dyn_from_thermal([r_th]*2, [c_th]*2, dt, "2d thermal 1hour")
+    
+    def test_pred_output(self):
+        '''test MPC.pred_output method'''
+        dt = self.dt
+        dyn = self.dyn2
+        n_sys = 2
+        assert n_sys == dyn.nx
+        
+        n_hor = int(2.5/dt)
+        assert n_hor == 12
+        
+        u_max = 1.2 #kW
+        c2 = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
+        
+        # input predictions. needs to be flattened
+        T_ext_hor = 2+np.zeros((n_hor, n_sys)) # °C
+        T_ext_hor = T_ext_hor.reshape((-1, 1))
+
+        u_hor = np.zeros((n_hor, n_sys))
+        u_hor[n_hor//2:] = 1
+        u_hor = u_hor.reshape((-1, 1))
+
+        T0 = np.array([20,10]).reshape((n_sys,1))
+
+        T_pred = c2.pred_output(T0, u_hor, T_ext_hor)
+        assert_equal(T_pred.shape, (n_sys*n_hor, 1))
+        
+        T_pred = c2.pred_output(T0, u_hor, T_ext_hor, reshape_2d=True)
+        assert_equal(T_pred.shape, (n_hor, n_sys))
+        
+        T_expected = np.array([
+            [ 16.4       ,   8.4       ],
+            [ 13.52      ,   7.12      ],
+            [ 11.216     ,   6.096     ],
+            [  9.3728    ,   5.2768    ],
+            [  7.89824   ,   4.62144   ],
+            [  6.718592  ,   4.097152  ],
+            [  9.7748736 ,   7.6777216 ],
+            [ 12.21989888,  10.54217728],
+            [ 14.1759191 ,  12.83374182],
+            [ 15.74073528,  14.66699346],
+            [ 16.99258823,  16.13359477],
+            [ 17.99407058,  17.30687581]])
+        
+        print(T_pred)
+        assert_allclose9(T_pred, T_expected)
+
+    def test_MPC_solve_u_opt(self):
+        '''test of MPC.solve_u_opt() method (calls cvxopt)'''
+        dt = self.dt
+        dyn = self.dyn1
+
+        n_hor = int(2.5/dt)
+        assert n_hor == 12
+        
+        u_max = 1.2 #kW
+        ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
+        
+        t = np.arange(1, n_hor+1)*dt
+
+        zn = np.zeros(n_hor)[:,None]
+        T_ext_hor = 2 + zn # °C
+        
+        Ts_hor = 18 + zn # °C
+        Ts_hor[5:] = 22 # °C ()
+        
+        T0 = 20 # °C
+        
+        ctrl.set_xyp(T0, Ts_hor, T_ext_hor)
+        
+        u_opt = ctrl.solve_u_opt()
+        
+        assert_equal(u_opt.shape, (n_hor,1))
+        
+        u_expected = np.array([
+            [ 0.39993755],
+            [ 0.79998746], # steady state at 0.8 kW
+            [ 0.7999875 ],
+            [ 0.79998751],
+            [ 1.12160221],
+            [ 1.19999986],  # peak at u_max
+            [ 1.19999099],
+            [ 1.05931038],
+            [ 0.9999868 ],  # steady state at 1 kW
+            [ 0.99998794],
+            [ 0.99998734],
+            [ 0.99973748]])
+        
+        print((u_opt - u_expected))
+        
+        assert_allclose6(u_opt, u_expected)
+
+
+    def test_MPC_closed_loop_sim(self):
+        '''test MPC.closed_loop_sim() method on a short simulation'''
+        dt = self.dt
+        dyn = self.dyn1
+
+        n_hor = int(1.5/dt)
+        assert n_hor == 7
+        n_sim = int(3/dt)
+        assert n_sim == 15
+        
+        u_max = 1.2 #kW
+        ctrl = mpc.MPC(dyn, n_hor, 0, u_max, 1, 100)
+
+        Ts_fcast_arr = 18 + np.zeros(n_sim+n_hor) # °C
+        Ts_fcast_arr[n_sim//2:] = 22 # °C
+        Ts_fcast = mpc.Oracle(Ts_fcast_arr)
+        
+        T_ext_fcast = mpc.ConstOracle(2) # °C
+        
+        T0 = np.atleast_2d(20) # °C
+        
+        ctrl.set_oracles(Ts_fcast, T_ext_fcast)
+        
+        u_sim, p, x, T_sim, Ts = ctrl.closed_loop_sim(T0, n_sim)
+        
+        # check consistency of T set point with Oracle input
+        assert_equal(Ts.shape, (n_sim,1))
+        assert_allclose9(Ts, Ts_fcast_arr[0:n_sim, None])
+        
+        # Check temperature output
+        assert_equal(T_sim.shape, (n_sim,1))
+        
+        T_expected = np.array([
+            [ 20.        ], # Ts is 18°
+            [ 17.99975035],
+            [ 17.99974999],
+            [ 17.99974999],
+            [ 17.99974966],
+            [ 17.99975053],
+            [ 19.28619851],
+            [ 20.62895623], # Ts becomes 22°
+            [ 21.70300215],
+            [ 21.99974997],
+            [ 21.99974998],
+            [ 21.99974998],
+            [ 21.99974998],
+            [ 21.99974998],
+            [ 21.99974998]])
+        
+        print((T_sim - T_expected))
+        print(np.hstack((T_sim, T_expected)))
+        
+        assert_allclose6(T_sim, T_expected)
+        
+        # Check MPC control sequence
+        assert_equal(u_sim.shape, (n_sim,1))
+        
+        u_expected = np.array([
+            [ 0.39993759],
+            [ 0.79998743], # steady state at 0.8 kW
+            [ 0.7999875 ],
+            [ 0.79998742],
+            [ 0.7999877 ],
+            [ 1.12159952], # peak at u_max
+            [ 1.19999936],
+            [ 1.19995929],
+            [ 1.05933706],
+            [ 0.9999875 ], # steady state at 1 kW
+            [ 0.9999875 ],
+            [ 0.9999875 ],
+            [ 0.9999875 ],
+            [ 0.9999875 ],
+            [ 0.9999875 ]])
+            
+        print((u_sim - u_expected))
+        assert_allclose6(u_sim, u_expected)
