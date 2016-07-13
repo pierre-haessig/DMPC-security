@@ -88,7 +88,6 @@ def mat_def(pb):
     q = matrix(q_mat.T,
                tc='d')
     ###
-    ###
     mat = dict(A=A, B=B, C=C, F=F, H=H, G=G, B_Text = B_Text, H_ext=H_ext, c_t=c_t, h=h, D=D, P=P, q=q, Y_c=Y_c, cte=cte, P_mat=P_mat, q_mat=q_mat)
 
     return mat
@@ -141,9 +140,9 @@ def optim_decen(pb, step, e, k_max=100):
 
     """
     m = pb['m']
+    dt = pb['dt']
     Umax = pb['Umax']
     u_m = pb['u_m']
-    Text = pb['Text']
     Text_sim = pb['Text_sim']
     T_mod = pb['T_mod']
     T_init = pb['T_init']
@@ -154,15 +153,11 @@ def optim_decen(pb, step, e, k_max=100):
     N = pb['N']
     N_sim = pb['N_sim']
 
-    mat = mat_def(pb)
-
     # Local variables
     tau_th = Rth * Cth
-
     U = np.ones(N_sim * m)
     T_res = np.zeros((N_sim+1) * m)
     Lgrn_mult = np.zeros(N_sim)
-    cte_N = np.zeros(N_sim)
     J_u = np.zeros(N_sim)
     cost = np.zeros(N_sim)
 
@@ -289,9 +284,16 @@ def get_temp_op_OL(pb, mat,  u_sol):
     return Y
 
 def get_Opt_CL(pb):
+    T_init = pb['T_init']
+    Text = pb['Text']
+    Text_sim = pb['Text_sim']
+    T_mod = pb['T_mod']
+    N_sim = pb['N_sim']
+    N = pb['N']
+    m = pb['m']
     pb_k = pb
-    mat_k = mat_def(pb_k)
 
+    mat_k = mat_def(pb_k)
     A = mat_k['A']
     B = mat_k['B']
     D = mat_k['D']
@@ -300,9 +302,6 @@ def get_Opt_CL(pb):
     H = mat_k['H']
     H_ext = mat_k['H_ext']
     B_Text = mat_k['B_Text']
-    T_init = pb['T_init']
-    P = mat_k['P']
-    q = mat_k['q']
     Y_c = mat_k['Y_c']
 
     U = np.zeros(N_sim * m)
@@ -333,21 +332,17 @@ def get_Opt_CL(pb):
 
     return T_res, U
 
-def plot_t(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
+def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     """
-    DynamicOpt.plot_traj(object)
+    DynamicOpt.plot_T(object)
     Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
     from DynamicOpt.get_temp_op_OL and the vector of optimal power.
     returns : graph of the ideal temperature and the optimum temperature.
     """
-
     T_id_pred = pb['T_id_pred']
-
-    Text = pb['Text']
     dt = pb['dt']
-    N = pb['N']
     m = pb['m']
-
+    N_sim = pb['N_sim']
     t = np.arange(N_sim) * dt
 
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(6,4))
@@ -363,7 +358,7 @@ def plot_t(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     ax2.legend()
     
     ax1.set(
-        ylabel=u'Temperature (°C)'
+        ylabel=u'Temperature (C)'
     )
 
     ax2.set(
@@ -377,55 +372,64 @@ def plot_t(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     return fig, (ax1, ax2)
 
 def temp_id(size, T_abs, T_pres):
-
+    """
+    Parameters : size of the horizon, temperature when absent, temperature when present
+    Returns : temperature profile
+    """
     t = np.arange(size) * dt
     occ = occupancy(t)
     T_min = np.zeros(size) + T_abs  # degC
     T_min[occ] = T_pres
-
     return T_min
 
 if __name__ == '__main__':
 
     # number of users
     m = 2
+    # vector of users
     i = np.arange(m)
-
     # Time step
     dt = 0.1  # h
-
-    # Horizon
+    # Simulation Horizon
     N_sim = int(24/dt)
+    # Prediction Horizon
     N = int(5/dt)
-
     # max energy in kW
     Umax = 3
-
     # max admissible energy
     u_m = np.array([2, 2], dtype=float)
-    assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
-
     # thermal parameters
+            ## Exterior Temperature on the whole horizon
     Text_sim = np.ones(m*(N_sim + N))*0
+            ## Exterior Temperature on the prediction horizon initially
     Text = Text_sim[0:m*N]
+            ## Temperature when present
     Tpres = 22
+            ## Temperature when absent
     Tabs = 18
+            ## Initial temperature in all users
     T_init = np.array([10, 10], dtype=float)
+            ## Thermal Resistance
     Rth = np.array([50, 50], dtype=float)
+            ## Thermal Capacity
     Cth = np.array([0.056, 0.056], dtype=float)
+            ## Reference temperature through the whole horizon
+    T_mod = np.hstack(
+        (temp_id(N_sim + N, Tabs, Tpres), temp_id(N_sim + N, Tabs, Tpres)))  ## ATTENTION : defined user after user
+            ## Reference temperature through the simulation horizon
+    T_id_pred = np.hstack(
+        (temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
+    # comfort factor
+    alpha = np.array([10, 10], dtype=float)
+
+    ## Verifications
+    assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
     assert len(T_init) == m, "illegal number of T_init. Expecting %s. and received %s." % (m, len(T_init))
     assert len(Rth) == m, "illegal number of Rth. Expecting %s. and received %s." % (m, len(Rth))
     assert len(Cth) == m, "illegal number of Cth. Expecting %s. and received %s." % (m, len(Cth))
+    assert len(alpha) == m, "illegal number of alpha. Expecting %s. and received %s." % (m, len(alpha))
 
-
-    T_mod = np.hstack((temp_id(N_sim+N, Tabs, Tpres), temp_id(N_sim+N, Tabs, Tpres))) ## ATTENTION : defined user after user
-
-    T_id_pred = np.hstack((temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
-
-
-    # comfort factor
-    alpha = np.array([100, 10], dtype=float)
-
+    # Definition of the dictionary
     pb = dict(m=m, dt=dt, Umax=Umax, u_m=u_m, Text=Text, Text_sim=Text_sim, T_mod=T_mod, T_init=T_init, Rth=Rth, Cth=Cth,
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
@@ -433,7 +437,7 @@ if __name__ == '__main__':
     T_cen, U_cen =get_Opt_CL(pb)
     pb['T_init'] = T_init
     U, T_res, L, cost, J_u= optim_decen(pb, 0.15, 1.0e-1)
-    plot_t(pb, 0, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
+    plot_T(pb, 0, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
     print(J_u)
 
     #mat = mat_def(pb)

@@ -68,7 +68,7 @@ class LinDyn(object):
     
     def __str__(self):
         name = '' if self.name is None else "'{}'".format(self.name)
-        return 'LinDyn {name} \n  dims x:{0.n_x}, u:{0.n_u}, p:{0.n_p}, y:{0.n_y}'.format(self, name=name)
+        return 'LinDyn {name} \n  dims x:{0.nx}, u:{0.nu}, p:{0.np}, y:{0.ny}'.format(self, name=name)
 
 
 def dyn_from_thermal(r_th, c_th, dt, name=None):

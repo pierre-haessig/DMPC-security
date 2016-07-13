@@ -30,8 +30,8 @@ def optim_central(pb):
     u_id = (T_id - Text) /Rth
 
     # Matrix definition
-    P = matrix(2 * alpha * np.diag(Rth ** 2), tc='d')
-    q = matrix(1 - 2 * alpha * u_id * (Rth ** 2), tc='d')
+    P = matrix(2 * np.diag(alpha*Rth ** 2), tc='d')
+    q = matrix(1 - 2 * alpha*u_id * (Rth ** 2), tc='d')
     G = matrix(np.vstack((np.ones(len(Rth)), -np.identity(len(Rth)), np.identity(len(Rth)))), tc='d')
     h = matrix(np.hstack((Umax, np.zeros(len(Rth)), u_m)), tc='d')
 
@@ -65,16 +65,16 @@ def optim_decen(pb, step, e, k_max=1000):
     u_id = (T_id - Text) / Rth
 
     L = 0
-    n = len(Rth)
-    u_sol = np.zeros(n)
+    m = len(Rth)
+    u_sol = np.zeros(m)
 
 
     for k in range(k_max):
         assert L >= 0, "u_id can be reached for all users"
-        for j in range(n):
+        for j in range(m):
 
-            Pj = matrix(2 * alpha * Rth[j] ** 2, tc='d')
-            qj = matrix(1 - 2 * alpha * Rth[j]**2 * u_id[j] + L, tc='d')
+            Pj = matrix(2 * alpha[j] * Rth[j] ** 2, tc='d')
+            qj = matrix(1 - 2 * alpha[j] * Rth[j]**2 * u_id[j] + L, tc='d')
             Gj = matrix([-1, 1], tc='d')
             hj = matrix([0, u_m[j]], tc='d')
 
@@ -247,6 +247,74 @@ def plot_step(pb, step_min, step_max, nbr , e):
     return fig, (ax1, ax2, ax3)
 
 
+def param_alpha(pb, a_beg, a_end, nbr):
+    assert m==2, "illegal number of users. Expecting 2 and received %s." % m
+    Rth=pb['Rth']
+    Text=pb['Text']
+    T_id=pb['T_id']
+    Umax=pb['Umax']
+    u_m=pb['u_m']
+    alpha=pb['alpha']
+
+    u_id = (T_id - Text) / Rth
+
+    alpha_ratio = np.logspace(a_beg, a_end, nbr)
+
+    _U = np.zeros((2, len(alpha_ratio)))
+    _DT = np.zeros((2, len(alpha_ratio)))
+
+    for z, ratio in enumerate(alpha_ratio):
+
+        alpha[1] = ratio*alpha[0]
+        print(alpha)
+
+        _pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
+
+        #sol_d = optim_decen(_pb, 1.5, 1.0e-2)
+        u_sol_d = optim_central(_pb)[0]
+        #u_sol_d, L, k = sol_d
+        _U[0, z] = u_sol_d[0]
+        _U[1, z] = u_sol_d[1]
+
+        _DT[0,z] = Rth[0] * (u_sol_d[0] - u_id[0])
+        _DT[1, z] = Rth[1] * (u_sol_d[1] - u_id[1])
+
+    return _U, _DT, alpha_ratio
+
+
+def plot_alpha(_U, _DT, alpha_ratio):
+
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+
+        ax1.plot(alpha_ratio, _U[0, :], 'r-+', label='1')
+        ax1.plot(alpha_ratio, _U[1, :], 'g-+', label='2')
+
+        ax1.hlines(Umax , alpha_ratio[0], alpha_ratio[-1], linestyles='--', label='')
+
+        ax1.set(
+            title=r'Parametric study of the comfort factor for $\alpha_1=$ %s' % alpha[0],
+            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
+            ylabel='$u^{*}$',
+            xscale='log'
+        )
+
+        ax1.legend(loc='upper left', markerscale=0.4)
+
+        ax2.plot(alpha_ratio, _DT[0, :], 'r')
+        ax2.plot(alpha_ratio, _DT[1, :], 'g')
+
+        ax2.set(
+            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
+            ylabel=r'$\Delta T = T -T_{id}$',
+        )
+
+        fig.tight_layout()
+
+        plt.show()
+
+        return fig, (ax1, ax2)
+
+
 if __name__ == '__main__':
     """
     Test bench
@@ -254,45 +322,42 @@ if __name__ == '__main__':
     ## variable definition
 
     # number of users
-    m = 6
+    m = 2
     i = np.arange(m)
 
     # max energy in kW
-    Umax = 30
-    u_m = np.array([5, 5, 5, 5, 5, 10], dtype=float)
+    Umax = 2
+    u_m = np.array([1.5, 1.5], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal resistance
     beta = 5  # if higher than 6, the optimization process considers than it isn't necessary to spend enery on room with high Rth
-    Rth = beta / u_m
+    Rth =np.array([10, 10])
 
     # Exterior temperature
-    Text = 15
+    Text = 10
 
     # Ideal temperature in degrees
-    T_id = np.array([21, 22, 21, 21, 21, 25], dtype=float)
+    T_id = np.array([21, 21], dtype=float)
     assert len(T_id) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(T_id))
 
     # Ideal energy
     deltaT = (T_id - Text)
 
     # comfort factor
-    alpha = 100
+    alpha = np.asarray([10, 10], dtype=float)
     #assert len(alpha) == m, "illegal number of alpha. Expecting %s. and received %s." % (m, len(alpha))
 
     pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
 
 
-    u_sol_c = optim_central(pb)
-    print_sol(pb, u_sol_c)
-    plot_sol(pb, u_sol_c)
 
+    #u_sol_d = optim_decen(pb, 1.5, 1.0e-2)
+    #print_sol(pb, u_sol_d)
+    #plot_sol(pb, u_sol_d)
 
-
-    u_sol_d = optim_decen(pb, 1.5, 1.0e-2)
-    print_sol(pb, u_sol_d)
-    plot_sol(pb, u_sol_d)
-
+    _U, _DT, alpha_ratio = param_alpha(pb, -3, 3, 50)
+    plot_alpha(_U, _DT, alpha_ratio)
     #plot_step(pb, 1, 100, 50, 1.0e-3)
 
 
