@@ -30,7 +30,7 @@ class LinDyn(object):
         self.name = name
         
         assert A.shape[0] == A.shape[1]
-        self.nx = A.shape[0] 
+        self.nx = A.shape[0]
         
         assert Bu.shape[0] == A.shape[0]
         self.nu = Bu.shape[1]
@@ -235,6 +235,22 @@ class MPC(object):
         # Precompute quadprog matrices which are independent of time
         self._update_P()
         self._update_Gh()
+        
+        self.ys_fcast = None
+        self.p_fcast = None
+    
+    def set_oracles(self, ys_fcast, p_fcast):
+        '''sets the input forecast generators (oracles) for ys and p
+        
+        ys_fcast : Oracle for ys, the output setpoint.
+        
+        p_fcast : Oracle for p, the input perturbation.
+        '''
+        assert hasattr(ys_fcast, 'pred') and hasattr(ys_fcast, 'real')
+        self.ys_fcast = ys_fcast
+        
+        assert hasattr(p_fcast, 'pred') and hasattr(p_fcast, 'real')
+        self.p_fcast = p_fcast
     
     def get_pred_mat(self):
         return self.F, self.Hu, self.Hp
@@ -356,14 +372,18 @@ class MPC(object):
             return u_opt, sol
         return u_opt
 
-    def closed_loop_sim(self, x0, n_sim, dyn, ys_fcast, p_fcast):
+    def closed_loop_sim(self, x0, n_sim, dyn=None):
         '''Simulates the MPC in closed loop
         
         Dynamics `dyn` can be the same as `self.dyn`, or different
-        (e.g. to investigate the effect modeling errors)
+        (e.g. to investigate the effect modeling errors).
+        If `None` (default), falls back to `self.dyn`.
         
-        Returns u, p, x, y
+        Returns u, p, x, y, ys
         '''
+        if dyn is None:
+            dyn = self.dyn
+        
         A = dyn.A
         Bu = dyn.Bu
         Bp = dyn.Bp
@@ -379,29 +399,31 @@ class MPC(object):
         p = np.zeros((n_sim, n_p))
         x = np.zeros((n_sim, n_x))
         y = np.zeros((n_sim, n_y))
+        ys = np.zeros((n_sim, n_y))
         x[0] = x0
         
         for k in range(n_sim):
-            p_hor = p_fcast.pred(k, nh)
+            p_hor = self.p_fcast.pred(k, nh)
             
             # TODO: fix the semantics. Output forecast should be k+1:k+1:nh | k
-            ys_hor = ys_fcast.pred(k, nh)
+            ys_hor = self.ys_fcast.pred(k+1, nh)
             
             x_k = x[k]
             y[k] = dyn.y(x_k)
+            ys[k] = self.ys_fcast.real(k)
             
             # mpc:
             self.set_xyp(x_k, ys_hor, p_hor)
             u_hor = self.solve_u_opt()
             
             u[k] = u_hor[0]
-            p[k] = p_fcast.real(k)
+            p[k] = self.p_fcast.real(k)
             
             if k+1<n_sim:
                 x[k+1] = dyn.x_next(x_k, u[k], p[k])
         # end for each instant k
         
-        return u, p, x, y
+        return u, p, x, y, ys
 
 
 class Oracle(object):
@@ -471,7 +493,6 @@ if __name__ == '__main__':
         
     ax2.plot(t_hor, u_opt, 'r+-')
     
-    
     ### Closed loop simulation
     n_sim = int(24/dt)
     
@@ -481,11 +502,13 @@ if __name__ == '__main__':
     
     T_ext_fcast = ConstOracle(2) # °C
     
-    u, p, x, y = ctrl.closed_loop_sim(T0, n_sim, dyn, Ts_fcast, T_ext_fcast)
+    ctrl.set_oracles(Ts_fcast, T_ext_fcast)
+    
+    u, p, x, y, ys = ctrl.closed_loop_sim(T0, n_sim)
     
     t_sim = np.arange(n_sim)*dt
     fig, (ax1, ax2) = plt.subplots(2,1, sharex=True)
-    ax1.plot(t_sim+dt, Ts_fcast_arr[0:n_sim], 'k:', label='set point')
+    ax1.plot(t_sim, ys, 'k:', label='T sp')
     ax1.plot(t_sim, y, 'g+-', label='T')
     ax1.plot(0, T0, 'gD')
     ax1.legend()
