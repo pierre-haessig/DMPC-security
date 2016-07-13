@@ -30,7 +30,7 @@ def optim_central(pb):
     u_id = (T_id - Text) /Rth
 
     # Matrix definition
-    P = matrix(2 * alpha*np.diag(Rth ** 2), tc='d')
+    P = matrix(2 * np.diag(alpha*Rth ** 2), tc='d')
     q = matrix(1 - 2 * alpha*u_id * (Rth ** 2), tc='d')
     G = matrix(np.vstack((np.ones(len(Rth)), -np.identity(len(Rth)), np.identity(len(Rth)))), tc='d')
     h = matrix(np.hstack((Umax, np.zeros(len(Rth)), u_m)), tc='d')
@@ -258,7 +258,7 @@ def param_alpha(pb, a_beg, a_end, nbr):
 
     u_id = (T_id - Text) / Rth
 
-    alpha_ratio = np.linspace(a_beg, a_end, nbr)
+    alpha_ratio = np.logspace(a_beg, a_end, nbr)
 
     _U = np.zeros((2, len(alpha_ratio)))
     _DT = np.zeros((2, len(alpha_ratio)))
@@ -270,9 +270,9 @@ def param_alpha(pb, a_beg, a_end, nbr):
 
         _pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
 
-        sol_d = optim_decen(_pb, 1.5, 1.0e-2)
-
-        u_sol_d, L, k = sol_d
+        #sol_d = optim_decen(_pb, 1.5, 1.0e-2)
+        u_sol_d = optim_central(_pb)[0]
+        #u_sol_d, L, k = sol_d
         _U[0, z] = u_sol_d[0]
         _U[1, z] = u_sol_d[1]
 
@@ -282,7 +282,7 @@ def param_alpha(pb, a_beg, a_end, nbr):
     return _U, _DT, alpha_ratio
 
 
-def plot_alpha(_U, _DT, alpha_ratio, a_end):
+def plot_alpha(_U, _DT, alpha_ratio):
     # graph colors (hexadecimal RRGGBB)
         c = {
             'max': '#bbd5f0',  # white blue
@@ -290,17 +290,18 @@ def plot_alpha(_U, _DT, alpha_ratio, a_end):
             'opt': '#f9d600'  # golden yellow
         }
 
-        fig, (ax1, ax2) = plt.subplots(2, 1)
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
-        ax1.plot(alpha_ratio, _U[0, :], 'r', label='1')
-        ax1.plot(alpha_ratio, _U[1, :], 'g', label='2')
+        ax1.plot(alpha_ratio, _U[0, :], 'r-+', label='1')
+        ax1.plot(alpha_ratio, _U[1, :], 'g-+', label='2')
 
-        ax1.hlines(Umax , 1 / 10, a_end - 1 / 10, linestyles='--', label='')
+        ax1.hlines(Umax , alpha_ratio[0], alpha_ratio[-1], linestyles='--', label='')
 
         ax1.set(
-            title='Parametric study of the comfort factor',
-            xlabel=r'$ \alpha_{1} / \alpha_{2} $',
+            title=r'Parametric study of the comfort factor for $\alpha_1=$ %s' % alpha[0],
+            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
             ylabel='$u^{*}$',
+            xscale='log'
         )
 
         ax1.legend(loc='upper left', markerscale=0.4)
@@ -309,7 +310,7 @@ def plot_alpha(_U, _DT, alpha_ratio, a_end):
         ax2.plot(alpha_ratio, _DT[1, :], 'g')
 
         ax2.set(
-            xlabel=r'$ \alpha_{1} / \alpha_{2} $',
+            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
             ylabel=r'$\Delta T = T -T_{id}$',
         )
 
@@ -337,7 +338,7 @@ if __name__ == '__main__':
 
     # thermal resistance
     beta = 5  # if higher than 6, the optimization process considers than it isn't necessary to spend enery on room with high Rth
-    Rth =[10, 10]
+    Rth =np.array([10, 10])
 
     # Exterior temperature
     Text = 10
@@ -350,7 +351,7 @@ if __name__ == '__main__':
     deltaT = (T_id - Text)
 
     # comfort factor
-    alpha = np.asarray([3, 3])
+    alpha = np.asarray([10, 10], dtype=float)
     #assert len(alpha) == m, "illegal number of alpha. Expecting %s. and received %s." % (m, len(alpha))
 
     pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
@@ -361,8 +362,8 @@ if __name__ == '__main__':
     #print_sol(pb, u_sol_d)
     #plot_sol(pb, u_sol_d)
 
-    _U, _DT, alpha_ratio = param_alpha(pb, 0, 3, 50)
-    plot_alpha(_U, _DT, alpha_ratio, 3)
+    _U, _DT, alpha_ratio = param_alpha(pb, -3, 3, 50)
+    plot_alpha(_U, _DT, alpha_ratio)
     #plot_step(pb, 1, 100, 50, 1.0e-3)
 
 
