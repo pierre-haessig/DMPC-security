@@ -382,6 +382,8 @@ def temp_id(size, T_abs, T_pres):
     T_min[occ] = T_pres
     return T_min
 
+"""TODO : remplacer size par t ou occ, ajouter t dans les param, definir t = arrange(N_sim + N)"""
+
 if __name__ == '__main__':
 
     # number of users
