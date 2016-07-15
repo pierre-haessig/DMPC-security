@@ -9,7 +9,7 @@ solvers.options['show_progress'] = False
 
 
 """
-Distributed MPC Optimization Closed Loop version v2.0
+Distributed MPC Optimization Closed Loop version v3.0
 """
 def mat_def(pb):
     """
