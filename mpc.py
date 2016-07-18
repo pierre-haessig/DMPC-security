@@ -418,7 +418,7 @@ class MPC(object):
         x = np.zeros((n_sim, n_x))
         y = np.zeros((n_sim, n_y))
         ys = np.zeros((n_sim, n_y))
-        x[0] = x0
+        x[0] = x0.reshape(-1)
         
         for k in range(n_sim):
             p_hor = self.p_fcast.pred(k, nh)
@@ -428,14 +428,14 @@ class MPC(object):
             
             x_k = x[k]
             y[k] = dyn.y(x_k)
-            ys[k] = self.ys_fcast.real(k)
+            ys[k] = self.ys_fcast.real(k).reshape(-1)
             
             # mpc:
             self.set_xyp(x_k, ys_hor, p_hor)
             u_hor = self.solve_u_opt()
             
-            u[k] = u_hor[0]
-            p[k] = self.p_fcast.real(k)
+            u[k] = u_hor.reshape((nh, n_u))[0]
+            p[k] = self.p_fcast.real(k).reshape(-1)
             
             if k+1<n_sim:
                 x[k+1] = dyn.x_next(x_k, u[k], p[k])
