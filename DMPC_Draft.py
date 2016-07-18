@@ -30,7 +30,6 @@ def mat_def(pb):
     alpha = pb['alpha']
     N = pb['N']
 
-
     # Local variables
     tau_th = Rth * Cth
 
@@ -38,7 +37,8 @@ def mat_def(pb):
     # Matrix definition
     X = T_init
     ###
-    D = np.diag([x for item in alpha for x in repeat(item, N)])
+    D = np.diag(np.tile(alpha, N))
+
     ###
     h = matrix(np.hstack((Umax * np.ones(N), np.zeros(m * N), np.tile(u_m, N))), tc='d')
     ###
@@ -356,7 +356,7 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     ax2.plot(t, [u_sol[m * j + i] for j in range(N_sim)], label=lab1)
     ax2.plot(t, [u_sol2[m * j + i] for j in range(N_sim)], '--', label=lab2)
     ax2.legend()
-    
+
     ax1.set(
         ylabel=u'Temperature (C)'
     )
@@ -367,54 +367,9 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     )
 
     fig.tight_layout()
-    plt.show()
 
     return fig, (ax1, ax2)
 
-def plot_T_tot(pb, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
-    """
-    DynamicOpt.plot_T(object)
-    Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
-    from DynamicOpt.get_temp_op_OL and the vector of optimal power.
-    returns : graph of the ideal temperature and the optimum temperature.
-    """
-    T_id_pred = pb['T_id_pred']
-    dt = pb['dt']
-    m = pb['m']
-    N_sim = pb['N_sim']
-    t = np.arange(N_sim) * dt
-
-    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(9, 6))
-
-    ax1.plot(t, [T_id_pred[j] for j in range(N_sim)], 'k:',
-             label='T_id')
-    ax1.plot(t, [T_opt[m * j] for j in range(N_sim)], label=lab1)
-    ax1.plot(t, [T_opt2[m * j] for j in range(N_sim)], '--', label=lab2)
-    ax1.legend()
-
-
-    ax2.plot(t, [T_opt[m * j + 1] for j in range(N_sim)], label=lab1)
-    ax2.plot(t, [T_opt2[m * j + 1] for j in range(N_sim)], '--', label=lab2)
-    ax2.legend()
-
-    ax2.plot(t, [T_id_pred[1 * N_sim + j] for j in range(N_sim)], 'k:',
-             label='T_id')
-
-
-    ax1.set(
-        ylabel=u'T (C) user0'
-    )
-
-    ax2.set(
-        xlabel='t (h)',
-        ylabel=u'T(C) user1'
-    )
-
-
-    fig.tight_layout()
-    plt.show()
-
-    return fig, (ax1, ax2)
 
 def temp_id(size, dt, T_abs, T_pres):
     """
@@ -465,7 +420,7 @@ if __name__ == '__main__':
     T_id_pred = np.hstack(
         (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
     # comfort factor
-    alpha = np.array([1, 0], dtype=float)
+    alpha = np.array([100, 0], dtype=float)
 
     ## Verifications
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
@@ -480,9 +435,11 @@ if __name__ == '__main__':
 
 
     T_cen, U_cen =get_Opt_CL(pb)
-    pb['T_init'] = T_init
-    U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
-    plot_T(pb, 1, T_cen, U_cen, 'dist.', T_cen, U_cen, 'cent.')
+
+    #pb['T_init'] = T_init
+    #U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
+    plot_T(pb, 0, T_cen, U_cen, 'dist.', T_cen, U_cen, 'cent.')
+    plt.show()
     #print(J_u)
 
     #mat = mat_def(pb)
