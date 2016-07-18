@@ -130,7 +130,7 @@ def optim_central(mat):
 
     return u_sol, prime_obj
 
-def optim_decen(pb, step, e, k_max=100):
+def optim_decen(pb, step, e, k_max=10):
     """ Distributed optimization for power allocation
 
           optim_decen(object)
@@ -337,7 +337,7 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     DynamicOpt.plot_T(object)
     Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
     from DynamicOpt.get_temp_op_OL and the vector of optimal power.
-    returns : graph of the ideal temperature and the optimum temperature.
+    returns : graph of the ideal temperature and the optimum temperature for usr i.
     """
     T_id_pred = pb['T_id_pred']
     dt = pb['dt']
@@ -345,7 +345,7 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     N_sim = pb['N_sim']
     t = np.arange(N_sim) * dt
 
-    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(6,4))
+    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(9,6))
 
     ax1.plot(t, [T_id_pred[i*N_sim + j] for j in range(N_sim)], 'k:',
              label='T_id')
@@ -353,7 +353,7 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     ax1.plot(t, [T_opt2[m * j + i] for j in range(N_sim)], '--', label=lab2)
     ax1.legend()
 
-    ax2.plot(t, [u_sol[m*j+i] for j in range(N_sim)], label=lab1)
+    ax2.plot(t, [u_sol[m * j + i] for j in range(N_sim)], label=lab1)
     ax2.plot(t, [u_sol2[m * j + i] for j in range(N_sim)], '--', label=lab2)
     ax2.legend()
     
@@ -371,7 +371,52 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
 
     return fig, (ax1, ax2)
 
-def temp_id(size, T_abs, T_pres):
+def plot_T_tot(pb, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
+    """
+    DynamicOpt.plot_T(object)
+    Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
+    from DynamicOpt.get_temp_op_OL and the vector of optimal power.
+    returns : graph of the ideal temperature and the optimum temperature.
+    """
+    T_id_pred = pb['T_id_pred']
+    dt = pb['dt']
+    m = pb['m']
+    N_sim = pb['N_sim']
+    t = np.arange(N_sim) * dt
+
+    fig, (ax1, ax2) = plt.subplots(2,1, sharex=True, figsize=(9, 6))
+
+    ax1.plot(t, [T_id_pred[j] for j in range(N_sim)], 'k:',
+             label='T_id')
+    ax1.plot(t, [T_opt[m * j] for j in range(N_sim)], label=lab1)
+    ax1.plot(t, [T_opt2[m * j] for j in range(N_sim)], '--', label=lab2)
+    ax1.legend()
+
+
+    ax2.plot(t, [T_opt[m * j + 1] for j in range(N_sim)], label=lab1)
+    ax2.plot(t, [T_opt2[m * j + 1] for j in range(N_sim)], '--', label=lab2)
+    ax2.legend()
+
+    ax2.plot(t, [T_id_pred[1 * N_sim + j] for j in range(N_sim)], 'k:',
+             label='T_id')
+
+
+    ax1.set(
+        ylabel=u'T (C) user0'
+    )
+
+    ax2.set(
+        xlabel='t (h)',
+        ylabel=u'T(C) user1'
+    )
+
+
+    fig.tight_layout()
+    plt.show()
+
+    return fig, (ax1, ax2)
+
+def temp_id(size, dt, T_abs, T_pres):
     """
     Parameters : size of the horizon, temperature when absent, temperature when present
     Returns : temperature profile
@@ -381,8 +426,6 @@ def temp_id(size, T_abs, T_pres):
     T_min = np.zeros(size) + T_abs  # degC
     T_min[occ] = T_pres
     return T_min
-
-"""TODO : remplacer size par t ou occ, ajouter t dans les param, definir t = arrange(N_sim + N)"""
 
 if __name__ == '__main__':
 
@@ -397,7 +440,7 @@ if __name__ == '__main__':
     # Prediction Horizon
     N = int(5/dt)
     # max energy in kW
-    Umax = 3
+    Umax = 2
     # max admissible energy
     u_m = np.array([2, 2], dtype=float)
     # thermal parameters
@@ -417,12 +460,12 @@ if __name__ == '__main__':
     Cth = np.array([0.056, 0.056], dtype=float)
             ## Reference temperature through the whole horizon
     T_mod = np.hstack(
-        (temp_id(N_sim + N, Tabs, Tpres), temp_id(N_sim + N, Tabs, Tpres)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim + N, dt, Tabs, Tpres), temp_id(N_sim + N, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
             ## Reference temperature through the simulation horizon
     T_id_pred = np.hstack(
-        (temp_id(N_sim, Tabs, Tpres), temp_id(N_sim, Tabs, Tpres)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
     # comfort factor
-    alpha = np.array([10, 10], dtype=float)
+    alpha = np.array([1, 0], dtype=float)
 
     ## Verifications
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
@@ -438,9 +481,9 @@ if __name__ == '__main__':
 
     T_cen, U_cen =get_Opt_CL(pb)
     pb['T_init'] = T_init
-    U, T_res, L, cost, J_u= optim_decen(pb, 0.15, 1.0e-1)
-    plot_T(pb, 0, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
-    print(J_u)
+    U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
+    plot_T(pb, 1, T_cen, U_cen, 'dist.', T_cen, U_cen, 'cent.')
+    #print(J_u)
 
     #mat = mat_def(pb)
     #print(mat)
