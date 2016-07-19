@@ -42,7 +42,6 @@ def optim_central(pb):
 
     return u_sol,
 
-
 def optim_decen(pb, step, e, k_max=1000):
     """ Distributed optimization for power allocation
 
@@ -88,6 +87,57 @@ def optim_decen(pb, step, e, k_max=1000):
             break
     return u_sol, L, k
 
+def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
+    """ Distributed optimization for power allocation
+
+       StaticOptimization.optim_decen(object)
+       Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), step for the Uzawa method, error, max
+       iterration.
+       Returns : out ndarray of the optimal solution for each user, value of the Lagrangian multiplier and number of
+       iterations
+
+       """
+
+    Rth = pb['Rth']
+    Text = pb['Text']
+    T_id = pb['T_id']
+    Umax = pb['Umax']
+    u_m = pb['u_m']
+    alpha = pb['alpha']
+
+    u_id = (T_id - Text) / Rth
+
+    L = 0
+    m = len(Rth)
+    u_sol = np.zeros(m)
+
+
+    for k in range(k_max):
+        assert L >= 0, "u_id can be reached for all users"
+        for j in range(m):
+
+            Pj = matrix(2 * alpha[j] * Rth[j] ** 2, tc='d')
+            qj = matrix(1 - 2 * alpha[j] * Rth[j]**2 * u_id[j] + L, tc='d')
+            Gj = matrix([-1, 1], tc='d')
+            hj = matrix([0, u_m[j]], tc='d')
+
+            solj = solvers.qp(Pj, qj, Gj, hj)
+            u_sol[j] = solj['x'][0]
+
+        Pj = matrix(2 * alpha[user] * Rth[user] ** 2, tc='d')
+        qj = matrix(1 - 2 * alpha[user] * Rth[user] ** 2 * u_id[user] + ratio*L, tc='d')
+        Gj = matrix([-1, 1], tc='d')
+        hj = matrix([0, u_m[user]], tc='d')
+
+        solj = solvers.qp(Pj, qj, Gj, hj)
+        u_sol[user] = solj['x'][0]
+
+        L = L + step * (u_sol.sum() - Umax)
+
+
+        if u_sol.sum() - Umax < e:
+            break
+    return u_sol, L, k
 
 def print_sol(pb, u_sol):
     """StaticOptimization.print_sol(param, sol )
@@ -109,7 +159,6 @@ def print_sol(pb, u_sol):
     print(table)
     total = u_sol_v.sum()
     print(total)
-
 
 def plot_sol(pb, u_sol):
     """StaticOptimization.plot_sol(param, sol )
@@ -173,7 +222,6 @@ def plot_sol(pb, u_sol):
 
     return fig, ax1
 
-
 def plot_step1(pb, range, pas, e):
     """
         StaticOptimization.plot_sol(param, range, precision, error )
@@ -196,7 +244,6 @@ def plot_step1(pb, range, pas, e):
     fig.savefig('step_opt.png', dpi=200, bbox_inches='tight')
     fig.savefig('step_opt.pdf', bbox_inches='tight')
     return fig, (ax1)
-
 
 def plot_step(pb, step_min, step_max, nbr , e):
     """
@@ -245,7 +292,6 @@ def plot_step(pb, step_min, step_max, nbr , e):
     fig.savefig('step_opt.pdf', bbox_inches='tight')
     return fig, (ax1, ax2, ax3)
 
-
 def param_alpha(pb, a_beg, a_end, nbr):
     assert m==2, "illegal number of users. Expecting 2 and received %s." % m
     Rth=pb['Rth']
@@ -277,7 +323,6 @@ def param_alpha(pb, a_beg, a_end, nbr):
         _DT[1, z] = Rth[1] * (u_sol_d[1] - u_id[1])
 
     return _U, _DT, alpha_ratio
-
 
 def plot_alpha(_U, _DT, alpha_ratio):
 
@@ -311,7 +356,6 @@ def plot_alpha(_U, _DT, alpha_ratio):
 
         return fig, (ax1, ax2)
 
-
 def param_Tbc(pb):
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
     Rth = pb['Rth']
@@ -343,7 +387,6 @@ def param_Tbc(pb):
         _DT[2, z] = Rth[2] * (u_sol_d[2] - u_id_real[2])
 
     return _U, _DT, T_sup
-
 
 def plot_Tbc(_U, _DT, T_sup):
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
@@ -377,7 +420,6 @@ def plot_Tbc(_U, _DT, T_sup):
     plt.show()
 
     return fig, (ax1, ax2)
-
 
 def param_Rth(pb):
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
@@ -414,7 +456,6 @@ def param_Rth(pb):
 
     return _U, _DT, varRth, Rth_real
 
-
 def plot_Rth(_U, _DT, varRth, Rth_real):
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
@@ -448,6 +489,36 @@ def plot_Rth(_U, _DT, varRth, Rth_real):
 
     return fig, (ax1, ax2)
 
+def param_mult(pb, l, step, e, user):
+
+    fig, (ax1) = plt.subplots(1, 1, sharex=True, figsize=(9, 6))
+
+    Rth = pb['Rth']
+    Text = pb['Text']
+    T_id = pb['T_id']
+
+    hor = np.linspace(0, 1, l)
+    res = hor.copy()
+
+    for z, ratio in enumerate(hor):
+        u_sol = optim_CHT_decen(pb, step, e, user, ratio)
+        u_sol_v = u_sol[0]
+
+        u_id = (T_id - Text) / Rth
+
+        deltaT_opt = Rth * (u_sol_v.T - u_id)
+
+        res[z] = deltaT_opt[user]
+
+    ax1.plot(res, '-+')
+    ax1.set(
+        xlabel='percentage of multiplier taken into account',
+        ylabel=r'$\Delta T$'
+    )
+    fig.tight_layout()
+    plt.show()
+
+    return res
 
 if __name__ == '__main__':
     """
@@ -485,15 +556,11 @@ if __name__ == '__main__':
 
 
 
-    #u_sol_d = optim_decen(pb, 1.5, 1.0e-2)
+    #u_sol_d = optim_CHT_decen(pb, 1.5, 1.0e-2, 1, 0.25)
     #print_sol(pb, u_sol_d)
     #plot_sol(pb, u_sol_d)
 
-    _U, _DT, ratio_Rth, Rth_real= param_Rth(pb)
-    print(Rth_real)
-    plot_Rth(_U, _DT, ratio_Rth, Rth_real)
-    #plot_step(pb, 1, 100, 50, 1.0e-3)
-
+    param_mult(pb, 10, 1.5, 1.0e-2, 1)
 
 
 
