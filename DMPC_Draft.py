@@ -368,19 +368,12 @@ def get_quad_mean(pb, T_res):
     N_sim = pb['N_sim']
     T_id_pred = pb['T_id_pred']
 
-    res = np.zeros(m)
-
     T_id_rshp = T_id_pred.reshape((N_sim, m))
     T_res_rshp = T_res.reshape((N_sim, m))
 
     diff = T_res_rshp - T_id_rshp
 
-    for x in range(N_sim):
-        for w in range(m):
-            diff[x, w] = diff[x, w]**2
-
-    for x in range(m):
-        res[x] = diff[x, :].mean()
+    res = (diff**2).mean(axis=0)
 
     return res
 
@@ -393,7 +386,7 @@ def get_mean(pb, U):
     res = np.zeros(m)
 
     for x in range(m):
-        res[x] = _U[x, :].mean()
+        res[x] = _U[:, x].mean()
 
     return res
 

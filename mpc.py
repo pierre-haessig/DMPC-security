@@ -241,7 +241,7 @@ class MPC(object):
     
     def set_oracles(self, ys_fcast, p_fcast):
         '''sets the input forecast generators (oracles) for ys and p
-        
+
         ys_fcast : Oracle for ys, the output setpoint.
         
         p_fcast : Oracle for p, the input perturbation.

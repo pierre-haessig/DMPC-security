@@ -218,7 +218,7 @@ def plot_sol(pb, u_sol):
 
     fig.savefig('power_bars.png', dpi=200, bbox_inches='tight')
     fig.savefig('power_bars.pdf', bbox_inches='tight')
-    plt.show()
+    #plt.show()
 
     return fig, ax1
 
@@ -498,7 +498,7 @@ def param_mult(pb, l, step, e, user):
     T_id = pb['T_id']
 
     hor = np.linspace(0, 1, l)
-    res = hor.copy()
+    res = np.zeros_like(hor)
 
     for z, ratio in enumerate(hor):
         u_sol = optim_CHT_decen(pb, step, e, user, ratio)
@@ -510,7 +510,7 @@ def param_mult(pb, l, step, e, user):
 
         res[z] = deltaT_opt[user]
 
-    ax1.plot(res, '-+')
+    ax1.plot(hor*100, res, '-+')
     ax1.set(
         xlabel='percentage of multiplier taken into account',
         ylabel=r'$\Delta T$'
