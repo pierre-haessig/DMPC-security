@@ -11,7 +11,6 @@ Centralized Optimization  version v1.5
 TODO = MPC in version v2.0
 """
 
-
 def optim_central(pb):
     """ Centralized optimization for power allocation
 

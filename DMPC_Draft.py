@@ -1,10 +1,9 @@
 from __future__ import division, print_function
 from cvxopt import matrix, solvers
 import numpy as np
-from itertools import repeat
+from tabulate import tabulate
 import matplotlib.pyplot as plt
 
-from tabulate import tabulate
 solvers.options['show_progress'] = False
 
 
@@ -109,6 +108,17 @@ def occupancy(t, t_switch=((6.5, 8), (18, 22))):
         assert t_off >= t_on
         occ |= (h>=t_on) & (h<=t_off)
     return occ
+
+def temp_id(size, dt, T_abs, T_pres):
+    """
+    Parameters : size of the horizon, temperature when absent, temperature when present
+    Returns : temperature profile
+    """
+    t = np.arange(size) * dt
+    occ = occupancy(t)
+    T_min = np.zeros(size) + T_abs  # degC
+    T_min[occ] = T_pres
+    return T_min
 
 def optim_central(mat):
     """
@@ -249,20 +259,20 @@ def optim_decen(pb, step, e, k_max=10):
         Lgrn_mult[k] = L[0]
         cost[k] = sum(U[k*m:k*m + m])
 
-        Gu = np.zeros(shape=(N_sim, m * N_sim))
-        for l in range(N_sim):
-            for nb_user in range(m):
-                Gu[l, l * m + nb_user] = 1
+    Gu = np.zeros(shape=(N_sim, m * N_sim))
+    for l in range(N_sim):
+        for nb_user in range(m):
+            Gu[l, l * m + nb_user] = 1
 
-        comfort = np.zeros(N_sim)
-        for hor in range(N_sim):
-            comfort[hor] = sum((T_res[k_room +  hor* m] - T_id_pred[k_room + hor * m]) ** 2 for k_room in range(m))
+    comfort = np.zeros(N_sim)
+    for hor in range(N_sim):
+        comfort[hor] = sum(alpha[k_room]*(T_res[k_room + hor * m] - T_id_pred[k_room + hor * m]) ** 2 for k_room in range(m))
 
-        J_u = Gu.dot(U) + comfort
+    J_u = Gu.dot(U) + comfort
 
     return U, T_res, Lgrn_mult, cost, J_u
 
-def get_temp_op_OL(pb, mat,  u_sol):
+def optim_central_OL(pb, mat,  u_sol):
     """
     DynamicOpt.get_temp_opt_OL(object)
     Parameters : dictionary of all the variables, dictionary of all the matrix, the vector solution of the power
@@ -287,8 +297,10 @@ def get_Opt_CL(pb):
     T_init = pb['T_init']
     Text = pb['Text']
     Text_sim = pb['Text_sim']
+    T_id_pred = pb['T_id_pred']
     T_mod = pb['T_mod']
     N_sim = pb['N_sim']
+    alpha = pb['alpha']
     N = pb['N']
     m = pb['m']
     pb_k = pb
@@ -306,6 +318,9 @@ def get_Opt_CL(pb):
 
     U = np.zeros(N_sim * m)
     T_res = np.zeros(N_sim * m)
+
+    cost = np.zeros(N_sim)
+    comfort = np.zeros(N_sim)
 
     for k in range(N_sim):
 
@@ -330,13 +345,72 @@ def get_Opt_CL(pb):
         T_init = A.dot(T_init) + B.dot(uk_sol[0][0:m]) + B_Text.dot(Text_sim[k*m:k*m + m])
         T_res[k*m:(k+1)*m] = T_init
 
-    return T_res, U
+        cost[k] = sum(U[k * m:k * m + m])
+
+    Gu = np.zeros(shape=(N_sim, m * N_sim))
+    for l in range(N_sim):
+        for nb_user in range(m):
+            Gu[l, l * m + nb_user] = 1
+
+
+    for hor in range(N_sim):
+        comfort[hor] = sum(
+            alpha[k_room] * (T_res[k_room + hor * m] - T_id_pred[k_room + hor * m]) ** 2 for k_room in range(m))
+
+
+    J_u_CL = Gu.dot(U) + comfort
+
+
+    return T_res, U, cost, J_u_CL
+
+def get_quad_mean(pb, T_res):
+    m = pb['m']
+    N_sim = pb['N_sim']
+    T_id_pred = pb['T_id_pred']
+
+    res = np.zeros(m)
+
+    T_id_rshp = T_id_pred.reshape((N_sim, m))
+    T_res_rshp = T_res.reshape((N_sim, m))
+
+    diff = T_res_rshp - T_id_rshp
+
+    for x in range(N_sim):
+        for w in range(m):
+            diff[x, w] = diff[x, w]**2
+
+    for x in range(m):
+        res[x] = diff[x, :].mean()
+
+    return res
+
+def get_mean(pb, U):
+    m = pb['m']
+    N_sim = pb['N_sim']
+
+    _U = U.reshape((N_sim, m))
+
+    res = np.zeros(m)
+
+    for x in range(m):
+        res[x] = _U[x, :].mean()
+
+    return res
+
+def get_data(pb,J_u, _U, _T):
+
+    col_1 = get_mean(pb, _U)
+    col_2 = get_quad_mean(pb, _T)
+
+    table = tabulate([col_1, col_2], floatfmt=".6f")
+    print(table)
+    print(J_u.mean())
 
 def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     """
     DynamicOpt.plot_T(object)
     Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
-    from DynamicOpt.get_temp_op_OL and the vector of optimal power.
+    from DynamicOpt.optim_central_OL and the vector of optimal power.
     returns : graph of the ideal temperature and the optimum temperature for usr i.
     """
     T_id_pred = pb['T_id_pred']
@@ -359,6 +433,7 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
 
     ax1.set(
         ylabel=u'Temperature (C)'
+
     )
 
     ax2.set(
@@ -367,20 +442,9 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
     )
 
     fig.tight_layout()
+    plt.show()
 
     return fig, (ax1, ax2)
-
-
-def temp_id(size, dt, T_abs, T_pres):
-    """
-    Parameters : size of the horizon, temperature when absent, temperature when present
-    Returns : temperature profile
-    """
-    t = np.arange(size) * dt
-    occ = occupancy(t)
-    T_min = np.zeros(size) + T_abs  # degC
-    T_min[occ] = T_pres
-    return T_min
 
 if __name__ == '__main__':
 
@@ -415,12 +479,12 @@ if __name__ == '__main__':
     Cth = np.array([0.056, 0.056], dtype=float)
             ## Reference temperature through the whole horizon
     T_mod = np.hstack(
-        (temp_id(N_sim + N, dt, Tabs, Tpres), temp_id(N_sim + N, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim + N, dt, Tabs, Tpres), temp_id(N_sim + N, dt, Tabs+1, Tpres+2)))  ## ATTENTION : defined user after user
             ## Reference temperature through the simulation horizon
     T_id_pred = np.hstack(
-        (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs+1, Tpres+2)))  ## ATTENTION : defined user after user
     # comfort factor
-    alpha = np.array([100, 0], dtype=float)
+    alpha = np.array([10, 10], dtype=float)
 
     ## Verifications
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
@@ -434,19 +498,14 @@ if __name__ == '__main__':
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
-    T_cen, U_cen =get_Opt_CL(pb)
-
+    T_cen, U_cen, cost_c, J_u_c =get_Opt_CL(pb)
     #pb['T_init'] = T_init
-    #U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
-    plot_T(pb, 0, T_cen, U_cen, 'dist.', T_cen, U_cen, 'cent.')
+    U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
+    plot_T(pb, 1, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
     plt.show()
-    #print(J_u)
+    #get_data(pb, J_u_c, U_cen, T_cen)
 
-    #mat = mat_def(pb)
-    #print(mat)
-    #u_sol = optim_central(mat)[0]
-    #T_opt = get_temp_op_OL(pb, mat, u_sol)
-    #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
+
 
 
 
