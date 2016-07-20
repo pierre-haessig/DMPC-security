@@ -11,6 +11,7 @@ Centralized Optimization  version v1.5
 TODO = MPC in version v2.0
 """
 
+"""""" """""" """""" """"""
 def optim_central(pb):
     """ Centralized optimization for power allocation
 
@@ -145,10 +146,6 @@ def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
             break
     return u_sol, L, k
 
-
-
-
-
 def print_sol(pb, u_sol):
     """StaticOptimization.print_sol(param, sol )
        Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), solution of the optimization QP as an
@@ -238,12 +235,13 @@ def plot_sol(pb, u_sol):
 
     return fig, ax1
 
+"""""" """""" """""" """"""
+
 def plot_step1(pb, range, pas, e):
     """
-        StaticOptimization.plot_sol(param, range, precision, error )
-        Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), range of step, precision, error
-        Returns : out graph of the distributed optimization total power allocation and the centralized optimization
-        total power allocation.
+        StaticOptimization.plot_step1(param, range, precision, error )
+        Parameters : dictionary of the problem, range of step, precision, error
+        Returns : graph of the distributed optimal power allocation as a function of the Uzawa step
     """
     fig, ax1 = plt.subplots(1,1)
     step = np.arange(float(range)/float(pas))*pas
@@ -263,11 +261,9 @@ def plot_step1(pb, range, pas, e):
 
 def plot_step(pb, step_min, step_max, nbr , e):
     """
-        StaticOptimization.plot_sol(param, range, precision, error )
-        Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), range of step, precision, error
-        Returns : out graph of the distributed optimization total power allocation and the centralized optimization
-        total power allocation, the graph of the evolution of the Lagrangian multiplier and the number of iteration
-        regarding the step.
+        StaticOptimization.plot_step(param, range_min, range_max, nbr_of_pts, error )
+        Returns : graph of the distributed optimal power allocation to Umax as a function of the
+        Uzawa step, the value of the Lagrangian multiplier and the number of Uzawa iterations.
     """
     fig, (ax1, ax2, ax3) = plt.subplots(3,1)
     fig.tight_layout()
@@ -277,7 +273,7 @@ def plot_step(pb, step_min, step_max, nbr , e):
     L_val = []
 
     for x in np.nditer(step):
-        u_sol, L, k = optim_decen(pb, x, e)
+        u_sol, L, k, J_u = optim_decen(pb, x, e)
         U.append(u_sol.sum()-pb['Umax'])
         L_val.append(L)
         k_val.append(k)
@@ -308,7 +304,13 @@ def plot_step(pb, step_min, step_max, nbr , e):
     fig.savefig('step_opt.pdf', bbox_inches='tight')
     return fig, (ax1, ax2, ax3)
 
+"""""" """""" """""" """"""
+
 def param_alpha(pb, a_beg, a_end, nbr):
+    """
+     parameter : dictionary of the problem, alpha_min, alpha_max, nbr_of_pts
+     returns : ssolution of the QP with _U and deltaT and the ration of the comfort factors
+    """
     assert m==2, "illegal number of users. Expecting 2 and received %s." % m
     Rth=pb['Rth']
     Text=pb['Text']
@@ -341,6 +343,9 @@ def param_alpha(pb, a_beg, a_end, nbr):
     return _U, _DT, alpha_ratio
 
 def plot_alpha(_U, _DT, alpha_ratio):
+        """
+        plots the paraletric study in alpha
+        """
 
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
@@ -372,7 +377,12 @@ def plot_alpha(_U, _DT, alpha_ratio):
 
         return fig, (ax1, ax2)
 
+"""""" """""" """""" """"""
+
 def param_Tbc(pb):
+    """
+    parametric study of the influence of the broadcasted temperature of reference
+    """
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
     Rth = pb['Rth']
     Text = pb['Text']
@@ -405,6 +415,9 @@ def param_Tbc(pb):
     return _U, _DT, T_sup
 
 def plot_Tbc(_U, _DT, T_sup):
+    """
+    Plots parametric study of the influence of the broadcasted temperature of reference
+    """
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
     ax1.plot(T_sup, _U[0, :], 'r-+', label='1')
@@ -437,7 +450,12 @@ def plot_Tbc(_U, _DT, T_sup):
 
     return fig, (ax1, ax2)
 
+"""""" """""" """""" """"""
+
 def param_Rth(pb):
+    """
+        parametric study of the influence of the broadcasted Rth
+    """
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
     Rth = pb['Rth']
     Rth_real = pb['Rth']
@@ -473,6 +491,9 @@ def param_Rth(pb):
     return _U, _DT, varRth, Rth_real
 
 def plot_Rth(_U, _DT, varRth, Rth_real):
+    """
+    Plots the  parametric study of the influence of the broadcasted Rth
+    """
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
     ax1.plot(varRth, _U[0, :], 'r-+', label='1')
@@ -505,7 +526,13 @@ def plot_Rth(_U, _DT, varRth, Rth_real):
 
     return fig, (ax1, ax2)
 
+"""""" """""" """""" """"""
+
 def param_mult(pb, l, step, e, user):
+    """
+    Plots the DeltaT as a function of the deafness of the user regarding the Lagrangian multiplier
+    result of the talk between all users
+    """
 
     fig, (ax1) = plt.subplots(1, 1, sharex=True, figsize=(9, 6))
 
@@ -517,7 +544,7 @@ def param_mult(pb, l, step, e, user):
     res = np.zeros_like(hor)
     res2 = np.zeros_like(hor)
 
-    if user==0 :
+    if user == 0:
         user2 = m
     else:
         user2 = user-1
@@ -546,6 +573,83 @@ def param_mult(pb, l, step, e, user):
 
     return res
 
+
+"""""" """""" """""" """"""
+def pwrdist(pb, user,  step, e, k_max=1000):
+    """
+    Plots the ideal power distribution for the user form pb as function of the number of Uzawa iteration and the
+    Lagrangian multiplier
+    """
+    m = pb['m']
+    Rth = pb['Rth']
+    Text = pb['Text']
+    T_id = pb['T_id']
+    Umax = pb['Umax']
+    u_m = pb['u_m']
+    alpha = pb['alpha']
+
+    k_Uzw = np.arange(k_max)
+    u_opt = np.zeros(shape=(k_max, m))
+    L_opt = np.zeros(shape=(k_max, m))
+
+    u_id = (T_id - Text) / Rth
+
+    L = 0
+    m = len(Rth)
+    u_sol = np.zeros(m)
+
+    for k in range(k_max):
+        assert L >= 0, "u_id can be reached for all users"
+        for j in range(m):
+            Pj = matrix(2 * alpha[j] * Rth[j] ** 2, tc='d')
+            qj = matrix(1 - 2 * alpha[j] * Rth[j] ** 2 * u_id[j] + L, tc='d')
+            Gj = matrix([-1, 1], tc='d')
+            hj = matrix([0, u_m[j]], tc='d')
+
+            solj = solvers.qp(Pj, qj, Gj, hj)
+            u_sol[j] = solj['x'][0]
+            u_opt[k, j] = u_sol[j]
+
+        L = L + step * (u_sol.sum() - Umax)
+
+
+        L_opt[k+1] = L
+
+        if u_sol.sum() - Umax < e:
+            print('break at %s.' % k)
+            break
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 6))
+
+    for j in range(m):
+        ax1.plot(k_Uzw, u_opt[:, j], '--')
+        ax2.plot(L_opt, u_opt[:, j], '--')
+
+    ax1.plot(k_Uzw, u_opt[:, user], 'b', label='user %s' % user)
+    ax2.plot(L_opt, u_opt[:, user], 'b')
+
+    ax1.legend(loc='lower left', markerscale=0.4)
+    ax1.set(
+        xlabel=r'$k_{Uzawa}$',
+        ylabel=r'$u^{*}$'
+    )
+    ax1.set_xlim([0, k+5])
+
+    ax1.annotate(r'%s' % k, xy=(k, -0.12), xycoords='data',
+                 size='small', ha='center', va='center', annotation_clip=False)
+    ax2.set(
+        xlabel=r'$\lambda}$',
+        ylabel=r'$u^{*}$'
+    )
+    ax2.annotate(r'%s' % L.round(1), xy=(L, -0.12), xycoords='data',
+                 size='small', ha='center', va='center', annotation_clip=False)
+
+    fig.tight_layout()
+
+    return fig, (ax1, ax2)
+
+
+###########################################################
 if __name__ == '__main__':
     """
     Test bench
@@ -575,18 +679,18 @@ if __name__ == '__main__':
     deltaT = (T_id - Text)
 
     # comfort factor
-    alpha = np.asarray([10, 10, 10], dtype=float)
+    alpha = np.asarray([10, 10, 100], dtype=float)
     #assert len(alpha) == m, "illegal number of alpha. Expecting %s. and received %s." % (m, len(alpha))
 
-    pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha)
+    pb = dict(Rth=Rth, Text=Text, T_id=T_id, Umax=Umax, u_m=u_m, alpha=alpha, m=m)
 
 
 
     #u_sol_d = optim_decen(pb, 15, 1.0e-2)
     #print_sol(pb, u_sol_d)
     #plot_sol(pb, u_sol_d)
-    #plt.show()
-    param_mult(pb, 10, 15, 1.0e-2, 1)
 
-
+    #param_mult(pb, 10, 15, 1.0e-2, 1)
+    pwrdist(pb, 1, 15, 1.0e-2, k_max=1000)
+    plt.show()
 
