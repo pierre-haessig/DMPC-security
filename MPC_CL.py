@@ -300,19 +300,12 @@ if __name__ == '__main__':
               T_id_pred=T_id_pred, alpha=alpha, N=N, N_sim=N_sim)
 
 
-
-
-    mat = mat_def(pb)
-
-    u_sol = optim_central(mat)[0]
-
+    #mat = mat_def(pb)
+    #u_sol = optim_central(mat)[0]
     #T_opt = get_temp_op_OL(pb, mat, u_sol)
     #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
-
-
-
-    T_res, U = get_Opt_CL(pb)
-    plot_t(pb, 0, T_res, U)
+    #T_res, U = get_Opt_CL(pb)
+    #plot_t(pb, 0, T_res, U)
 
 
 

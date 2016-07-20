@@ -575,7 +575,7 @@ def param_mult(pb, l, step, e, user):
 
 
 """""" """""" """""" """"""
-def pwrdist(pb, user,  step, e, k_max=1000):
+def pwrdist(pb,  step, e, k_max=1000):
     """
     Plots the ideal power distribution for the user form pb as function of the number of Uzawa iteration and the
     Lagrangian multiplier
@@ -590,7 +590,7 @@ def pwrdist(pb, user,  step, e, k_max=1000):
 
     k_Uzw = np.arange(k_max)
     u_opt = np.zeros(shape=(k_max, m))
-    L_opt = np.zeros(shape=(k_max, m))
+    L_opt = np.zeros(shape=(k_max+1, m))
 
     u_id = (T_id - Text) / Rth
 
@@ -621,19 +621,22 @@ def pwrdist(pb, user,  step, e, k_max=1000):
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 6))
 
+    L_opt = L_opt[0:k_max]
     for j in range(m):
-        ax1.plot(k_Uzw, u_opt[:, j], '--')
+        ax1.plot(k_Uzw, u_opt[:, j], '--', label='%s' % j)
         ax2.plot(L_opt, u_opt[:, j], '--')
 
-    ax1.plot(k_Uzw, u_opt[:, user], 'b', label='user %s' % user)
-    ax2.plot(L_opt, u_opt[:, user], 'b')
+    #ax1.plot(k_Uzw, u_opt[:, user], 'b', label='user %s' % user)
+    #ax2.plot(L_opt, u_opt[:, user], 'b')
 
-    ax1.legend(loc='lower left', markerscale=0.4)
+    #ax1.legend(loc='lower left', markerscale=0.4)
+    ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     ax1.set(
         xlabel=r'$k_{Uzawa}$',
         ylabel=r'$u^{*}$'
     )
     ax1.set_xlim([0, k+5])
+    ax1.set_ylim([0, 1.05])
 
     ax1.annotate(r'%s' % k, xy=(k, -0.12), xycoords='data',
                  size='small', ha='center', va='center', annotation_clip=False)
@@ -641,6 +644,9 @@ def pwrdist(pb, user,  step, e, k_max=1000):
         xlabel=r'$\lambda}$',
         ylabel=r'$u^{*}$'
     )
+    ax2.set_xlim([0, L.round(0)+10])
+    ax2.set_ylim([0, 1.05])
+
     ax2.annotate(r'%s' % L.round(1), xy=(L, -0.12), xycoords='data',
                  size='small', ha='center', va='center', annotation_clip=False)
 
@@ -691,6 +697,6 @@ if __name__ == '__main__':
     #plot_sol(pb, u_sol_d)
 
     #param_mult(pb, 10, 15, 1.0e-2, 1)
-    pwrdist(pb, 1, 15, 1.0e-2, k_max=1000)
+    pwrdist(pb, 15, 1.0e-2, k_max=1000)
     plt.show()
 
