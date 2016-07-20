@@ -48,8 +48,8 @@ def optim_decen(pb, step, e, k_max=1000):
        StaticOptimization.optim_decen(object)
        Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), step for the Uzawa method, error, max
        iterration.
-       Returns : out ndarray of the optimal solution for each user, value of the Lagrangian multiplier and number of
-       iterations
+       Returns : out ndarray of the optimal solution for each user, value of the Lagrangian multiplier, number of
+       iterations and the value of the cost function J_u.
 
        """
 
@@ -65,7 +65,6 @@ def optim_decen(pb, step, e, k_max=1000):
     L = 0
     m = len(Rth)
     u_sol = np.zeros(m)
-
 
     for k in range(k_max):
         assert L >= 0, "u_id can be reached for all users"
@@ -83,9 +82,16 @@ def optim_decen(pb, step, e, k_max=1000):
         L = L + step * (u_sol.sum() - Umax)
 
         if u_sol.sum() - Umax < e:
-            #print('break at %s.' %(k))
+            print('break at %s.' % k)
             break
-    return u_sol, L, k
+
+
+
+    cost = u_sol.sum()
+    deltaT_opt = Rth * (u_sol.T - u_id)
+    J_u = cost + alpha.dot((deltaT_opt**2))
+
+    return u_sol, L, k, J_u
 
 def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
     """ Distributed optimization for power allocation
@@ -125,7 +131,7 @@ def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
             u_sol[j] = solj['x'][0]
 
         Pj = matrix(2 * alpha[user] * Rth[user] ** 2, tc='d')
-        qj = matrix(1 - 2 * alpha[user] * Rth[user] ** 2 * u_id[user] + ratio*L, tc='d')
+        qj = matrix(1 - 2 * alpha[user] * Rth[user] ** 2 * u_id[user] + (1-ratio)*L, tc='d')
         Gj = matrix([-1, 1], tc='d')
         hj = matrix([0, u_m[user]], tc='d')
 
@@ -138,6 +144,10 @@ def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
         if u_sol.sum() - Umax < e:
             break
     return u_sol, L, k
+
+
+
+
 
 def print_sol(pb, u_sol):
     """StaticOptimization.print_sol(param, sol )
@@ -152,10 +162,11 @@ def print_sol(pb, u_sol):
     u_sol_v = u_sol[0]
 
 
-    u_id = (T_id - Text) / Rth
-    deltaT = T_id - Text
 
-    table = tabulate([deltaT, u_m, u_id, u_sol_v], floatfmt=".6f")
+    u_id = (T_id - Text) / Rth
+    deltaT_opt = Rth * (u_sol_v.T - u_id)
+
+    table = tabulate([deltaT_opt, u_m, u_id, u_sol_v], floatfmt=".6f")
     print(table)
     total = u_sol_v.sum()
     print(total)
@@ -175,7 +186,8 @@ def plot_sol(pb, u_sol):
     i = np.arange(len(Rth))
     n = len(Rth)
     u_sol_v = u_sol[0]
-
+    J_u = u_sol[3]
+    kUzawa = u_sol[2]
 
     u_id = (T_id - Text) / Rth
 
@@ -203,6 +215,11 @@ def plot_sol(pb, u_sol):
         ax1.annotate("%.1f" % float(deltaT_opt[l]), xy=(l, u_sol_v[l]), xycoords='data',
                      size='small', ha='center', va='center')
 
+    ax1.annotate('J_u = %s' % J_u, xy=(0.055, -0.1), xycoords='data',
+                 size='small', ha='center', va='center', annotation_clip=False)
+    ax1.annotate(r'$k_{\;Uzawa}$ = %s' % kUzawa, xy=(-0.5, -0.12), xycoords='data',
+                 size='small', ha='center', va='center', annotation_clip=False)
+
     ax1.set(
         title='Power allocation = {:.5f}/{}'.format(u_sol_v.sum(), Umax),
         xticks=i,
@@ -210,9 +227,8 @@ def plot_sol(pb, u_sol):
         ylabel='heating power (kW)',
     )
 
-
-
-    ax1.legend(loc='upper left', markerscale=0.4)
+    ax1.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    #ax1.legend(loc='upper left', markerscale=0.4)
 
     fig.tight_layout()
 
@@ -499,6 +515,12 @@ def param_mult(pb, l, step, e, user):
 
     hor = np.linspace(0, 1, l)
     res = np.zeros_like(hor)
+    res2 = np.zeros_like(hor)
+
+    if user==0 :
+        user2 = m
+    else:
+        user2 = user-1
 
     for z, ratio in enumerate(hor):
         u_sol = optim_CHT_decen(pb, step, e, user, ratio)
@@ -509,10 +531,14 @@ def param_mult(pb, l, step, e, user):
         deltaT_opt = Rth * (u_sol_v.T - u_id)
 
         res[z] = deltaT_opt[user]
+        res2[z] = deltaT_opt[user2]
 
-    ax1.plot(hor*100, res, '-+')
+    ax1.plot(hor*100, res, 'r-+', label='user %s' % user)
+    ax1.plot(hor * 100, res2, 'g-+', label='user %s' % user2)
+
+    ax1.legend(loc='center right', markerscale=0.4)
     ax1.set(
-        xlabel='percentage of multiplier taken into account',
+        xlabel='percentage of deafness',
         ylabel=r'$\Delta T$'
     )
     fig.tight_layout()
@@ -532,7 +558,7 @@ if __name__ == '__main__':
 
     # max energy in kW
     Umax = 2
-    u_m = np.array([1.5, 1.5, 1.5], dtype=float)
+    u_m = np.array([1, 1, 1], dtype=float)
     assert len(u_m) == m, "illegal number of users. Expecting %s. and received %s." % (m, len(u_m))
 
     # thermal resistance
@@ -556,11 +582,11 @@ if __name__ == '__main__':
 
 
 
-    #u_sol_d = optim_CHT_decen(pb, 1.5, 1.0e-2, 1, 0.25)
+    #u_sol_d = optim_decen(pb, 15, 1.0e-2)
     #print_sol(pb, u_sol_d)
     #plot_sol(pb, u_sol_d)
-
-    param_mult(pb, 10, 1.5, 1.0e-2, 1)
+    #plt.show()
+    param_mult(pb, 10, 15, 1.0e-2, 1)
 
 
 

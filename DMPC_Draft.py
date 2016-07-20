@@ -368,12 +368,12 @@ def get_quad_mean(pb, T_res):
     N_sim = pb['N_sim']
     T_id_pred = pb['T_id_pred']
 
-    T_id_rshp = T_id_pred.reshape((N_sim, m))
+    T_id_rshp = np.array([T_id_pred[usr*N_sim : usr*N_sim + N_sim] for usr in range(m)])
     T_res_rshp = T_res.reshape((N_sim, m))
 
-    diff = T_res_rshp - T_id_rshp
+    diff = T_res_rshp.T - T_id_rshp
 
-    res = (diff**2).mean(axis=0)
+    res = (diff**2).mean(axis=1)
 
     return res
 
@@ -392,10 +392,10 @@ def get_mean(pb, U):
 
 def get_data(pb,J_u, _U, _T):
 
-    col_1 = get_mean(pb, _U)
-    col_2 = get_quad_mean(pb, _T)
+    lig_1 = get_mean(pb, _U)
+    lig_2 = get_quad_mean(pb, _T)
 
-    table = tabulate([col_1, col_2], floatfmt=".6f")
+    table = tabulate([lig_1, lig_2], floatfmt=".6f")
     print(table)
     print(J_u.mean())
 
@@ -472,10 +472,10 @@ if __name__ == '__main__':
     Cth = np.array([0.056, 0.056], dtype=float)
             ## Reference temperature through the whole horizon
     T_mod = np.hstack(
-        (temp_id(N_sim + N, dt, Tabs, Tpres), temp_id(N_sim + N, dt, Tabs+1, Tpres+2)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim + N, dt, Tabs, Tpres), temp_id(N_sim + N, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
             ## Reference temperature through the simulation horizon
     T_id_pred = np.hstack(
-        (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs+1, Tpres+2)))  ## ATTENTION : defined user after user
+        (temp_id(N_sim, dt, Tabs, Tpres), temp_id(N_sim, dt, Tabs, Tpres)))  ## ATTENTION : defined user after user
     # comfort factor
     alpha = np.array([10, 10], dtype=float)
 
@@ -493,10 +493,10 @@ if __name__ == '__main__':
 
     T_cen, U_cen, cost_c, J_u_c =get_Opt_CL(pb)
     #pb['T_init'] = T_init
-    U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
-    plot_T(pb, 1, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
-    plt.show()
-    #get_data(pb, J_u_c, U_cen, T_cen)
+    #U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
+    #plot_T(pb, 1, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
+    #plt.show()
+    get_data(pb, J_u_c, U_cen, T_cen)
 
 
 
