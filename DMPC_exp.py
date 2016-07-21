@@ -183,10 +183,8 @@ def optim_decen(pb, step, e, k_max=10):
         for i_u in range(k_max):
 
             for n_hor in range(N):
-
-                Y_cj = np.zeros(N)
-
                 for j in range(m):
+                    Y_cj = np.zeros(N)
                     Xj = T_res[k*m + j]
                     for l_hor in range(N):
                         Y_cj[l_hor] = T_mod[j * (N_sim + N) + k + l_hor]
@@ -244,8 +242,6 @@ def optim_decen(pb, step, e, k_max=10):
 
                     U[(k+n_hor) * m + j] = np.asarray(uk_sol['x']).T[0][0]
 
-
-                for j in range(m):
 
                     Aj = 1 - dt * (1 / tau_th[j])
                     Bj = (dt / Cth[j])

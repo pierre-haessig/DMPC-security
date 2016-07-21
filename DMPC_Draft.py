@@ -91,7 +91,7 @@ def mat_def(pb):
 
     return mat
 
-def occupancy(t, t_switch=((6.5, 8), (18, 22))):
+def occupancy(t, t_switch=((2.5, 4.5), (18, 22))):
     '''boolean occupancy vector for each instant in vector `t` (in hours)
 
     occupancy is True between switching hours `t_switch`,
@@ -140,7 +140,7 @@ def optim_central(mat):
 
     return u_sol, prime_obj
 
-def optim_decen(pb, step, e, k_max=10):
+def optim_decen(pb, step, e, k_max=100):
     """ Distributed optimization for power allocation
 
           optim_decen(object)
@@ -165,8 +165,8 @@ def optim_decen(pb, step, e, k_max=10):
 
     # Local variables
     tau_th = Rth * Cth
-    U = np.ones(N_sim * m)
-    T_res = np.zeros((N_sim+1) * m)
+    U = np.zeros((N_sim + N) * m)
+    T_res = np.zeros((N_sim + N) * m)
     Lgrn_mult = np.zeros(N_sim)
     J_u = np.zeros(N_sim)
     cost = np.zeros(N_sim)
@@ -185,64 +185,64 @@ def optim_decen(pb, step, e, k_max=10):
                     Y_cj[l_hor] = T_mod[j * (N_sim + N) + k + l_hor]
 
 
-                Aj = 1 - dt * (1 / tau_th[j])
-                Fj = np.asarray([Aj ** (i + 1) for i in range(N)]).T
-                Textj = np.asarray([np.zeros(N)]).T
-                Bj = (dt / Cth[j])
-                Cj = 1
-                ###
-                H_initj = [[Bj]]
+                    Aj = 1 - dt * (1 / tau_th[j])
+                    Fj = np.asarray([Aj ** (i + 1) for i in range(N)]).T
+                    Textj = np.asarray([np.zeros(N)]).T
+                    Bj = (dt / Cth[j])
+                    Cj = 1
+                    ###
+                    H_initj = [[Bj]]
 
-                for l_h in range(N - 1):
-                    H_initj = np.vstack((np.bmat([H_initj, np.zeros(shape=((l_h + 1), 1))]),
-                                         [[Aj ** (l_h + 1 - x) * (Bj) for x in range(0, l_h + 2)]]))
-                Hj = H_initj
-                ###
-                Gj = matrix(np.vstack((-np.identity(N), np.identity(N))), tc='d')
-                G1 = np.zeros(shape=(N, m * N))
-                for l in range(N):
-                    for nb_user in range(m):
-                        G1[l, l * m + nb_user] = 1
-                ###
-                Dj = np.identity(N) * alpha[j]
-                ###
-                hj = matrix(np.hstack((np.zeros(N), np.ones(N) * u_m[j])), tc='d')
-                ###
-                c_tj = np.ones(N)
-                ###
-                B_Textj = (dt / tau_th[j])
-                ###
-                H_init_Textj = [[B_Textj]]
-                for l_hp in range(N - 1):
-                    H_init_Textj = np.vstack((np.bmat([H_init_Textj, np.zeros(shape=((l_hp + 1), 1))]),
-                                              [[Aj ** (l_hp + 1 - x) * (B_Textj) for x in range(0, l_hp + 2)]]))
-                H_extj = H_init_Textj
-                ###
-
-
-                ###
-                P_matj = 2 * (Hj.T).dot(Dj.dot(Hj))
-                Pj = matrix(P_matj, tc='d')
-
-                q_matjk = (c_tj + 2 * ((Fj * Xj).T.dot(Dj.dot(Hj))) + 2 * (
-                    ((H_extj.dot(Textj)).T).dot(Dj.dot(Hj))) - 2 * (
-                               Y_cj.T).dot(Dj.dot(Hj))) + L
-
-                qj = matrix(q_matjk.T,
-                            tc='d')
-
-                ctej = ((Fj*Xj).T).dot(Dj.dot(Fj))*Xj + 2 * (
-                ((H_extj*Textj).T).dot(Dj.dot(Fj)) - Y_cj.T.dot(Dj.T.dot(Fj)))*Xj + (H_extj*Textj).T.dot(
-                    Dj.dot(H_extj*Textj)) - 2 * Y_cj.T.dot(Dj.T.dot(H_extj*Textj)) + Y_cj.T.dot(Dj*Y_cj)
-
-                uk_sol = solvers.qp(Pj, qj, Gj, hj)
-
-                U[k * m + j] = np.asarray(uk_sol['x']).T[0][0]
+                    for l_h in range(N - 1):
+                        H_initj = np.vstack((np.bmat([H_initj, np.zeros(shape=((l_h + 1), 1))]),
+                                             [[Aj ** (l_h + 1 - x) * (Bj) for x in range(0, l_h + 2)]]))
+                    Hj = H_initj
+                    ###
+                    Gj = matrix(np.vstack((-np.identity(N), np.identity(N))), tc='d')
+                    G1 = np.zeros(shape=(N, m * N))
+                    for l in range(N):
+                        for nb_user in range(m):
+                            G1[l, l * m + nb_user] = 1
+                    ###
+                    Dj = np.identity(N) * alpha[j]
+                    ###
+                    hj = matrix(np.hstack((np.zeros(N), np.ones(N) * u_m[j])), tc='d')
+                    ###
+                    c_tj = np.ones(N)
+                    ###
+                    B_Textj = (dt / tau_th[j])
+                    ###
+                    H_init_Textj = [[B_Textj]]
+                    for l_hp in range(N - 1):
+                        H_init_Textj = np.vstack((np.bmat([H_init_Textj, np.zeros(shape=((l_hp + 1), 1))]),
+                                                  [[Aj ** (l_hp + 1 - x) * (B_Textj) for x in range(0, l_hp + 2)]]))
+                    H_extj = H_init_Textj
+                    ###
 
 
-            Delta = G1.dot(U[0:N * m]) - Umax
+                    ###
+                    P_matj = 2 * (Hj.T).dot(Dj.dot(Hj))
+                    Pj = matrix(P_matj, tc='d')
+
+                    q_matjk = (c_tj + 2 * ((Fj * Xj).T.dot(Dj.dot(Hj))) + 2 * (
+                        ((H_extj.dot(Textj)).T).dot(Dj.dot(Hj))) - 2 * (
+                                   Y_cj.T).dot(Dj.dot(Hj))) + L
+
+                    qj = matrix(q_matjk.T,
+                                tc='d')
+
+                    ctej = ((Fj*Xj).T).dot(Dj.dot(Fj))*Xj + 2 * (
+                    ((H_extj*Textj).T).dot(Dj.dot(Fj)) - Y_cj.T.dot(Dj.T.dot(Fj)))*Xj + (H_extj*Textj).T.dot(
+                        Dj.dot(H_extj*Textj)) - 2 * Y_cj.T.dot(Dj.T.dot(H_extj*Textj)) + Y_cj.T.dot(Dj*Y_cj)
+
+                    uk_sol = solvers.qp(Pj, qj, Gj, hj)
+
+                    U[(k + l_hor) * m + j] = np.asarray(uk_sol['x']).T[0][0]
+
+            Delta = G1.dot(U[k * m:(k + N) * m]) - Umax
+            print(Delta)
             L = L + step * Delta
-            L[L<0] = 0
+            L[L < 0] = 0
 
 
             for j in range(m):
@@ -253,11 +253,15 @@ def optim_decen(pb, step, e, k_max=10):
                 T_res[(k+1) * m + j] = Aj * T_res[k * m + j] + Bj * U[k * m + j] + B_Textj * Text_sim[k * m + j]
 
             if all(x < e for x in Delta):
-                print('break at %s.' % (i_u))
+                print('break %s at %s.' % (k, i_u))
                 break
 
         Lgrn_mult[k] = L[0]
         cost[k] = sum(U[k*m:k*m + m])
+        print(k)
+
+    U = U[0:N_sim * m]
+    T_res = T_res[0:(N_sim + 1) * m]
 
     Gu = np.zeros(shape=(N_sim, m * N_sim))
     for l in range(N_sim):
@@ -448,11 +452,11 @@ if __name__ == '__main__':
     # Time step
     dt = 0.1  # h
     # Simulation Horizon
-    N_sim = int(24/dt)
+    N_sim = int(6/dt)
     # Prediction Horizon
-    N = int(5/dt)
+    N = int(2/dt)
     # max energy in kW
-    Umax = 2
+    Umax = 1.5
     # max admissible energy
     u_m = np.array([2, 2], dtype=float)
     # thermal parameters
@@ -492,11 +496,11 @@ if __name__ == '__main__':
 
 
     T_cen, U_cen, cost_c, J_u_c =get_Opt_CL(pb)
-    #pb['T_init'] = T_init
-    #U, T_res, L, cost, J_u= optim_decen(pb, 5, 1.0e-1)
-    #plot_T(pb, 1, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
-    #plt.show()
-    get_data(pb, J_u_c, U_cen, T_cen)
+    pb['T_init'] = T_init
+    U, T_res, L, cost, J_u= optim_decen(pb, 1, 1.0e-2)
+    plot_T(pb, 1, T_res, U, 'dist.', T_cen, U_cen, 'cent.')
+    plt.show()
+    #get_data(pb, J_u_c, U_cen, T_cen)
 
 
 
