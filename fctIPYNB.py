@@ -94,6 +94,8 @@ def plot_2usr(pb, T_opt, u_sol, i, lab1, T_opt2, u_sol2, z, lab2, x_min=6, x_max
     plt.show()
     return fig, (ax1, ax2)
 
+"""""" """""" """""" """"""
+
 def plot_alpha1(pb, _U, _DT, alpha_ratio):
     Umax = pb['Umax']
     alpha = pb['alpha']
@@ -189,6 +191,8 @@ def plot_alpha(pb, _U, _DT, alpha_ratio):
 
     return fig, (ax1, ax2)
 
+"""""" """""" """""" """"""
+
 def plot_Tbc(pb, _U, _DT, T_sup, ):
     Umax = pb['Umax']
     m = pb['m']
@@ -221,6 +225,8 @@ def plot_Tbc(pb, _U, _DT, T_sup, ):
     fig.tight_layout()
 
     return fig, (ax1, ax2)
+
+"""""" """""" """""" """"""
 
 def plot_Rth(pb, _U, _DT, varRth, Rth, figsize=(9, 6)):
 

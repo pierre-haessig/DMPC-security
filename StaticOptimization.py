@@ -7,8 +7,7 @@ from tabulate import tabulate
 solvers.options['show_progress'] = False
 
 """
-Centralized Optimization  version v1.5
-TODO = MPC in version v2.0
+Centralized Optimization  version v2.0
 """
 
 """""" """""" """""" """"""
