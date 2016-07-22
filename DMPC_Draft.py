@@ -443,6 +443,79 @@ def plot_T(pb, i, T_opt, u_sol, lab1, T_opt2, u_sol2, lab2):
 
     return fig, (ax1, ax2)
 
+def get_Opt_Seq(pb):
+    T_init = pb['T_init']
+    Text = pb['Text']
+    Text_sim = pb['Text_sim']
+    T_id_pred = pb['T_id_pred']
+    T_mod = pb['T_mod']
+    N_sim = pb['N_sim']
+    alpha = pb['alpha']
+    N = pb['N']
+    m = pb['m']
+    u1_sim = pb['u1_sim']
+    user_nhl = pb['user_nhl']
+    pb_k = pb
+
+    mat_k = mat_def(pb_k)
+    A = mat_k['A']
+    B = mat_k['B']
+    D = mat_k['D']
+    c_t = mat_k['c_t']
+    F = mat_k['F']
+    H = mat_k['H']
+    H_ext = mat_k['H_ext']
+    B_Text = mat_k['B_Text']
+    Y_c = mat_k['Y_c']
+
+    U = np.zeros(N_sim * m)
+    T_res = np.zeros(N_sim * m)
+
+    cost = np.zeros(N_sim)
+    comfort = np.zeros(N_sim)
+
+    for k in range(N_sim):
+
+        pb_k['T_init'] = T_init
+
+        for j in range(N):
+            for i in range(m):
+                Y_c[j*m + i] = T_mod[i*(N_sim + N) + k + j]
+
+
+        q_mat = (c_t + 2 * ((F.dot(T_init)).T.dot(D.dot(H))) + 2 * (((H_ext.dot(Text)).T).dot(D.dot(H))) - 2 * (Y_c.T).dot(D.dot(H)))
+        q = matrix(q_mat.T, tc='d')
+
+        mat_k['q_mat'] = q_mat
+        mat_k['q'] = q
+
+        uk_sol = optim_central(mat_k)
+
+
+        U[k*m:k*m+m] = uk_sol[0][0:m]
+        U[k*m + user_nhl] = u1_sim[k]
+
+        T_init = A.dot(T_init) + B.dot(U[k*m:(k+1)*m]) + B_Text.dot(Text_sim[k*m:k*m + m])
+        T_res[k*m:(k+1)*m] = T_init
+
+        cost[k] = sum(U[k * m:k * m + m])
+
+    Gu = np.zeros(shape=(N_sim, m * N_sim))
+    for l in range(N_sim):
+        for nb_user in range(m):
+            Gu[l, l * m + nb_user] = 1
+
+
+    for hor in range(N_sim):
+        comfort[hor] = sum(
+            alpha[k_room] * (T_res[k_room + hor * m] - T_id_pred[k_room + hor * m]) ** 2 for k_room in range(m))
+
+
+    J_u_CL = Gu.dot(U) + comfort
+
+    return T_res, U, cost, J_u_CL
+
+
 if __name__ == '__main__':
 
     # number of users
