@@ -1,3 +1,5 @@
+# Sylvain Chatel - July 2016
+
 from __future__ import division, print_function
 from cvxopt import matrix, solvers
 import numpy as np
@@ -7,17 +9,18 @@ from tabulate import tabulate
 solvers.options['show_progress'] = False
 
 """
-Centralized Optimization  version v2.0
+Centralized Optimization  version v4.0
 """
 
 """""" """""" """""" """"""
 def optim_central(pb):
-    """ Centralized optimization for power allocation
+    """
+        Returns the power distribution u_sol of the central static QP.
 
-    StaticOptimization.optim_central(object)
-    Parameters : dictionary of parameters Rth, Text, T_id, Umax, u_m, alpha.
-    Returns : out ndarray of the optimal solution for each user
-
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
     """
     Rth = pb['Rth']
     Text = pb['Text']
@@ -28,9 +31,12 @@ def optim_central(pb):
 
     u_id = (T_id - Text) /Rth
 
+    print(np.shape(alpha*u_id))
+    print(np.shape(2*Rth**2))
+
     # Matrix definition
     P = matrix(2 * np.diag(alpha*Rth ** 2), tc='d')
-    q = matrix(1 - 2 * alpha*u_id * (Rth ** 2), tc='d')
+    q = matrix(1 - 2*alpha*u_id * (Rth ** 2), tc='d')
     G = matrix(np.vstack((np.ones(len(Rth)), -np.identity(len(Rth)), np.identity(len(Rth)))), tc='d')
     h = matrix(np.hstack((Umax, np.zeros(len(Rth)), u_m)), tc='d')
 
@@ -42,16 +48,20 @@ def optim_central(pb):
 
     return u_sol,
 
-def optim_decen(pb, step, e, k_max=1000):
-    """ Distributed optimization for power allocation
+def optim_decen(pb, step, e, k_max=1000, count=True):
+    """
+    Returns power distribution u_sol, the lagrangian multiplier, the number of Uzawa iterations and
+     the value of the cost function in the static distributed optimization
 
-       StaticOptimization.optim_decen(object)
-       Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), step for the Uzawa method, error, max
-       iterration.
-       Returns : out ndarray of the optimal solution for each user, value of the Lagrangian multiplier, number of
-       iterations and the value of the cost function J_u.
-
-       """
+    keyword arguments:
+    pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+     Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+      comfort factor, size of the prediction horizon)
+    step -- step of the Lagrangian in the Uzawa method
+    e -- value of the maxim gap tolerable
+    k_max -- max number of iteration in the Uzawa method (default 1000)
+    count -- boolean to print the count of breaks (default True)
+    """
 
     Rth = pb['Rth']
     Text = pb['Text']
@@ -65,6 +75,7 @@ def optim_decen(pb, step, e, k_max=1000):
     L = 0
     m = len(Rth)
     u_sol = np.zeros(m)
+    k_uzw = 0
 
     for k in range(k_max):
         assert L >= 0, "u_id can be reached for all users"
@@ -78,31 +89,35 @@ def optim_decen(pb, step, e, k_max=1000):
             solj = solvers.qp(Pj, qj, Gj, hj)
             u_sol[j] = solj['x'][0]
 
+        k_uzw = k
 
         L = L + step * (u_sol.sum() - Umax)
 
         if u_sol.sum() - Umax < e:
-            print('break at %s.' % k)
+            if count == True:
+                print('break at %s.' % k)
             break
-
-
-
     cost = u_sol.sum()
     deltaT_opt = Rth * (u_sol.T - u_id)
     J_u = cost + alpha.dot((deltaT_opt**2))
 
-    return u_sol, L, k, J_u
+    return u_sol, L, k_uzw, J_u
 
 def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
-    """ Distributed optimization for power allocation
+    """
+    Returns power distribution u_sol, the lagrangian multiplier, the number of Uzawa iterations and
+     the value of the cost function in the static distributed optimization with a user cheating with his comfort factor.
 
-       StaticOptimization.optim_decen(object)
-       Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), step for the Uzawa method, error, max
-       iterration.
-       Returns : out ndarray of the optimal solution for each user, value of the Lagrangian multiplier and number of
-       iterations
-
-       """
+    keyword arguments:
+    pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+     Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+      comfort factor, size of the prediction horizon)
+    step -- step of the Lagrangian in the Uzawa method
+    e -- value of the maxim gap tolerable
+    user -- number of the user cheating
+    ratio -- ratio of the comfort factor in comparison to the one of the other users (default 0.0)
+    k_max -- max number of iteration in the Uzawa method (default 1000)
+    """
 
     Rth = pb['Rth']
     Text = pb['Text']
@@ -143,13 +158,19 @@ def optim_CHT_decen(pb, step, e, user, ratio=0.,  k_max=1000):
 
         if u_sol.sum() - Umax < e:
             break
-    return u_sol, L, k
+    return u_sol, L, k, 'tba'
 
 def print_sol(pb, u_sol):
-    """StaticOptimization.print_sol(param, sol )
-       Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), solution of the optimization QP as an
-       array.
-       Returns : out table of deltaT, u_m, u_id and u_sol for each user
+    """
+        Returns a table of the average deviation of the temperature, the maximal power admissible, the ideal power
+         distribution and the optimal power distribution
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        u_sol -- optimal power distribution
+
     """
     Rth = pb['Rth']
     Text = pb['Text']
@@ -167,11 +188,16 @@ def print_sol(pb, u_sol):
     total = u_sol_v.sum()
     print(total)
 
-def plot_sol(pb, u_sol):
-    """StaticOptimization.plot_sol(param, sol )
-       Parameters : dictionary of parameters (Rth, Text, T_id, Umax, u_m, alpha), solution of the optimization QP as an
-       array.
-       Returns : out bar graph of the power allocation, max power and ideal power  for each user.
+def plot_sol(pb, u_sol, decen=True):
+    """
+        Plots the optimal power distribution
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        u_sol -- optimal power distribution
+
     """
 
     Rth = pb['Rth']
@@ -182,8 +208,9 @@ def plot_sol(pb, u_sol):
     i = np.arange(len(Rth))
     n = len(Rth)
     u_sol_v = u_sol[0]
-    J_u = u_sol[3]
-    kUzawa = u_sol[2]
+    if decen==True:
+        J_u = u_sol[3]
+        kUzawa = u_sol[2]
 
     u_id = (T_id - Text) / Rth
 
@@ -211,10 +238,11 @@ def plot_sol(pb, u_sol):
         ax1.annotate("%.1f" % float(deltaT_opt[l]), xy=(l, u_sol_v[l]), xycoords='data',
                      size='small', ha='center', va='center')
 
-    ax1.annotate('J_u = %s' % J_u, xy=(0.055, -0.1), xycoords='data',
-                 size='small', ha='center', va='center', annotation_clip=False)
-    ax1.annotate(r'$k_{\;Uzawa}$ = %s' % kUzawa, xy=(-0.5, -0.12), xycoords='data',
-                 size='small', ha='center', va='center', annotation_clip=False)
+    if decen==True:
+        ax1.annotate('J_u = %s' % J_u, xy=(0.055, -0.1), xycoords='data',
+                     size='small', ha='center', va='center', annotation_clip=False)
+        ax1.annotate(r'$k_{\;Uzawa}$ = %s' % kUzawa, xy=(-0.5, -0.12), xycoords='data',
+                     size='small', ha='center', va='center', annotation_clip=False)
 
     ax1.set(
         title='Power allocation = {:.5f}/{}'.format(u_sol_v.sum(), Umax),
@@ -237,10 +265,17 @@ def plot_sol(pb, u_sol):
 """""" """""" """""" """"""
 
 def plot_step1(pb, range, pas, e):
+
     """
-        StaticOptimization.plot_step1(param, range, precision, error )
-        Parameters : dictionary of the problem, range of step, precision, error
-        Returns : graph of the distributed optimal power allocation as a function of the Uzawa step
+        Returns the graph of the distributed optimal power allocation as a function of the Uzawa step.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        range -- range of the Uzawa step
+        pas -- step of the Uzawa step variation
+        e -- admissible gap
     """
     fig, ax1 = plt.subplots(1,1)
     step = np.arange(float(range)/float(pas))*pas
@@ -260,10 +295,19 @@ def plot_step1(pb, range, pas, e):
 
 def plot_step(pb, step_min, step_max, nbr , e):
     """
-        StaticOptimization.plot_step(param, range_min, range_max, nbr_of_pts, error )
-        Returns : graph of the distributed optimal power allocation to Umax as a function of the
+        Returns the graph of the distributed optimal power allocation to Umax as a function of the
         Uzawa step, the value of the Lagrangian multiplier and the number of Uzawa iterations.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        step_min -- minimal Uzawa step
+        step_max -- maximal Uzawa step
+        nbr -- number of point of the Uzawa step
+        e -- admissible gap
     """
+
     fig, (ax1, ax2, ax3) = plt.subplots(3,1)
     fig.tight_layout()
     step = np.logspace(np.log10(step_min), np.log10(step_max), nbr)
@@ -307,9 +351,18 @@ def plot_step(pb, step_min, step_max, nbr , e):
 
 def param_alpha(pb, a_beg, a_end, nbr):
     """
-     parameter : dictionary of the problem, alpha_min, alpha_max, nbr_of_pts
-     returns : ssolution of the QP with _U and deltaT and the ration of the comfort factors
+        Returns the optimal power distribution, the temperature deviation as a parametric study of the comfort factor
+        and the comfort factor ratio vector.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        a_min -- minimal comfort factor
+        a_max -- maximal comfort factor
+        nbr -- number of point of the comfort factor ratio
     """
+
     assert m==2, "illegal number of users. Expecting 2 and received %s." % m
     Rth=pb['Rth']
     Text=pb['Text']
@@ -342,45 +395,58 @@ def param_alpha(pb, a_beg, a_end, nbr):
     return _U, _DT, alpha_ratio
 
 def plot_alpha(_U, _DT, alpha_ratio):
-        """
-        plots the paraletric study in alpha
-        """
+    """
+        Plots the optimal power distribution and the temperature as a parametric study of the comfort factor.
 
-        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+        keyword arguments:
+        _U -- optimal power distribution as a function of the comfort factor ratio
+        -DT -- optimal temperature deviation as a function of the comfort factor ratio
+        alpha_ratio -- vector of the comfort factor ratio
+    """
 
-        ax1.plot(alpha_ratio, _U[0, :], 'r-+', label='1')
-        ax1.plot(alpha_ratio, _U[1, :], 'g-+', label='2')
 
-        ax1.hlines(Umax , alpha_ratio[0], alpha_ratio[-1], linestyles='--', label='')
+    fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
-        ax1.set(
-            title=r'Parametric study of the comfort factor for $\alpha_1=$ %s' % alpha[0],
-            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
-            ylabel='$u^{*}$',
-            xscale='log'
-        )
+    ax1.plot(alpha_ratio, _U[0, :], 'r-+', label='1')
+    ax1.plot(alpha_ratio, _U[1, :], 'g-+', label='2')
 
-        ax1.legend(loc='upper left', markerscale=0.4)
+    ax1.hlines(Umax , alpha_ratio[0], alpha_ratio[-1], linestyles='--', label='')
 
-        ax2.plot(alpha_ratio, _DT[0, :], 'r')
-        ax2.plot(alpha_ratio, _DT[1, :], 'g')
+    ax1.set(
+        title=r'Parametric study of the comfort factor for $\alpha_1=$ %s' % alpha[0],
+        xlabel=r'$ \alpha_{2} / \alpha_{1} $',
+        ylabel='$u^{*}$',
+        xscale='log'
+    )
 
-        ax2.set(
-            xlabel=r'$ \alpha_{2} / \alpha_{1} $',
-            ylabel=r'$\Delta T = T -T_{id}$',
-        )
+    ax1.legend(loc='upper left', markerscale=0.4)
 
-        fig.tight_layout()
+    ax2.plot(alpha_ratio, _DT[0, :], 'r')
+    ax2.plot(alpha_ratio, _DT[1, :], 'g')
 
-        plt.show()
+    ax2.set(
+        xlabel=r'$ \alpha_{2} / \alpha_{1} $',
+        ylabel=r'$\Delta T = T -T_{id}$',
+    )
 
-        return fig, (ax1, ax2)
+    fig.tight_layout()
+
+    plt.show()
+
+    return fig, (ax1, ax2)
 
 """""" """""" """""" """"""
 
 def param_Tbc(pb):
     """
-    parametric study of the influence of the broadcasted temperature of reference
+        Returns the optimal power distribution, the temperature deviation and the supposed temperature as a parametric
+         study of the broadcasted temperature.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+
     """
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
     Rth = pb['Rth']
@@ -415,7 +481,13 @@ def param_Tbc(pb):
 
 def plot_Tbc(_U, _DT, T_sup):
     """
-    Plots parametric study of the influence of the broadcasted temperature of reference
+    Plots the optimal power distribution and the temperature deviation as a function of the broadcasted temperature.
+
+    keyword arguments:
+    _U -- optimal power distribution when the broadcasted temperature differ from the wanted temperature
+    _DT -- optimal temperature deviation when the broadcasted temperature differ from the wanted temperature
+    T_sup -- broadcasted temperature
+
     """
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
@@ -453,7 +525,14 @@ def plot_Tbc(_U, _DT, T_sup):
 
 def param_Rth(pb):
     """
-        parametric study of the influence of the broadcasted Rth
+        Returns the optimal power distribution, the temperature deviation and the supposed temperature as a parametric
+         study of the thermal resistance.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+
     """
     assert m == 3, "illegal number of users. Expecting 3 and received %s." % m
     Rth = pb['Rth']
@@ -491,7 +570,15 @@ def param_Rth(pb):
 
 def plot_Rth(_U, _DT, varRth, Rth_real):
     """
-    Plots the  parametric study of the influence of the broadcasted Rth
+    Plots the optimal power distribution and the temperature deviation  as a parametric study of the thermal
+     resistance.
+
+    keyword arguments:
+    _U -- optimal power distribution when the thermal resistance is the parameter
+    _DT -- optimal temperature deviation when the thermal resistance is the parameter
+    varRth -- vector of the parametric thermal resistance
+    Rth_real -- real thermal resistance
+
     """
     fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
 
@@ -529,8 +616,17 @@ def plot_Rth(_U, _DT, varRth, Rth_real):
 
 def param_mult(pb, l, step, e, user):
     """
-    Plots the DeltaT as a function of the deafness of the user regarding the Lagrangian multiplier
-    result of the talk between all users
+        Plots the DeltaT as a function of the deafness of the user regarding the Lagrangian multiplier
+        result of the talk between all users
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        l -- number of points for the parametric study
+        step -- value of the Uzawa step
+        e -- maximal admissible gap
+        user -- number of the user studied
     """
 
     fig, (ax1) = plt.subplots(1, 1, sharex=True, figsize=(9, 6))
@@ -576,9 +672,19 @@ def param_mult(pb, l, step, e, user):
 """""" """""" """""" """"""
 def pwrdist(pb,  step, e, k_max=1000):
     """
-    Plots the ideal power distribution for the user form pb as function of the number of Uzawa iteration and the
-    Lagrangian multiplier
+        Plots the ideal power distribution for the user from pb as function of the number of Uzawa iteration and the
+        Lagrangian multiplier
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
+        step -- value of the Uzawa step
+        e -- maximal admissible gap
+        k_max = maximum Uzawa iteration (default 1000)
+
     """
+
     m = pb['m']
     Rth = pb['Rth']
     Text = pb['Text']

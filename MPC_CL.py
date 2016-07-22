@@ -1,10 +1,11 @@
+# Sylvain Chatel - July 2016
+
 from __future__ import division, print_function
 from cvxopt import matrix, solvers
 import numpy as np
 from itertools import repeat
 import matplotlib.pyplot as plt
 
-from tabulate import tabulate
 solvers.options['show_progress'] = False
 
 
@@ -14,10 +15,14 @@ Centralized MPC Optimization  Closed Loop version v2.3
 
 def mat_def(pb):
     """
-    DynamicOptimisation.mat_def(object)
-    parameters : dictionary of all the variables
-    returns : dictionary of all the matrix needed in the optimization problem
+        Forms all the matrix needed for the QP.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon)
     """
+
     # parameters
     m = pb['m']
     dt = pb['dt']
@@ -114,11 +119,12 @@ def occupancy(t, t_switch=((6.5, 8), (18, 22))):
 
 def optim_central(mat):
     """
-    DynamicOptimization.optim_central(object)
-    Parameters : dictionary of all the matrix needed cf. DynamicOpt.mat_def
-    Returns : out ndarray of the optimal solution for each user
+    Returns the vector of optimal power for the pb with central open loop control, and the value of the primal objective
 
+    keyword arguments:
+    mat -- result of mat_def(pb)
     """
+
     # parameters
     G = mat['G']
     h = mat['h']
@@ -134,11 +140,14 @@ def optim_central(mat):
 
 def get_temp_op_OL(pb, mat,  u_sol):
     """
-    DynamicOpt.get_temp_opt_OL(object)
-    Parameters : dictionary of all the variables, dictionary of all the matrix, the vector solution of the power
-    optimization problem.
-    returns : vector Y of all the temperature in open loop control
+    Returns the optimal temperature in the centralized open loop control.
 
+    keyword arguments:
+    pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+     Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+      comfort factor, size of the prediction horizon)
+    mat -- dictionary of the matrix result of mat_def (F, H, H_ext)
+    u_sol -- optimal power distribution, result of optim_central
     """
     # parameters
     T_init = pb['T_init']
@@ -154,6 +163,15 @@ def get_temp_op_OL(pb, mat,  u_sol):
     return Y
 
 def get_Opt_CL(pb):
+    """
+        Returns the optimal temperature in central closed loop control, the optimal power distribution,
+         the power cost and the value of the cost function.
+
+        keyword arguments:
+        pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+         Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+          comfort factor, size of the prediction horizon, size of the simulation horizon)
+    """
     pb_k = pb
     mat_k = mat_def(pb_k)
 
@@ -201,10 +219,17 @@ def get_Opt_CL(pb):
 
 def plot_t(pb, i, T_opt, u_sol):
     """
-    DynamicOpt.plot_traj(object)
-    Parameters : dictionary of the variables, number of the user, the vector of all optimal temperature
-    from DynamicOpt.get_temp_op_OL and the vector of optimal power.
-    returns : graph of the ideal temperature and the optimum temperature.
+    Returns the graph of temperature and power consumption for user i.
+
+    keyword arguments:
+    pb -- dictionary of the problem (nbr of users, time step, max resources, max admissible power, thermal resistance,
+     Thermal capacity, vector of the init temperature, value of the exterior temperature, reference temperature,
+      comfort factor, size of the prediction horizon)
+    i -- number of the user to plot
+    T_opt -- optimal temperature profile
+    u_sol -- optimal power distribution
+
+
     """
 
     T_id_pred = pb['T_id_pred']
@@ -238,6 +263,10 @@ def plot_t(pb, i, T_opt, u_sol):
     return fig, (ax1, ax2)
 
 def temp_id(size, T_abs, T_pres):
+    """
+        Parameters : size of the horizon, temperature when absent, temperature when present
+        Returns : temperature profile
+    """
 
     t = np.arange(size) * dt
     occ = occupancy(t)
@@ -247,6 +276,15 @@ def temp_id(size, T_abs, T_pres):
     return T_min
 
 def get_Cost(mat, u_sol):
+    """
+        Returns the value of the cost function after the optimization.
+
+        keyword arguments:
+        mat -- result of mat_def(pb)
+        u_sol -- optimal power distribution
+
+    """
+
     P_mat = mat['P_mat']
     q_mat = mat['q_mat']
     cte = mat['cte']
@@ -256,6 +294,9 @@ def get_Cost(mat, u_sol):
     return Ju_opt
 
 if __name__ == '__main__':
+    """
+    Test bench
+    """
 
     # number of users
     m = 2
@@ -304,7 +345,7 @@ if __name__ == '__main__':
     #u_sol = optim_central(mat)[0]
     #T_opt = get_temp_op_OL(pb, mat, u_sol)
     #plot_t(pb, 0, T_opt, u_sol)  ## be careful and set N=N_sim otherwise error
-    #T_res, U = get_Opt_CL(pb)
+    #T_res, U = optim_central_CL(pb)
     #plot_t(pb, 0, T_res, U)
 
 
